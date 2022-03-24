@@ -173,7 +173,7 @@ class appnog(qtw.QMainWindow):
         except :
             pass
 
-        self.filename = qtw.QFileDialog.getOpenFileName(directory='~/datanog/DATA')[0]
+        self.filename = qtw.QFileDialog.getOpenFileName(directory='~/gordata/DATA')[0]
         print("File :", self.filename)
         self.datacache = pd.read_csv(self.filename, index_col='t')
         for item in self.datacache.columns:
