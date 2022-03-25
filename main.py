@@ -1,3 +1,4 @@
+from msilib.schema import Directory
 import datanog as nog
 from gui import Ui_MainWindow
 import scipy.signal as signal
@@ -52,27 +53,18 @@ class appnog(qtw.QMainWindow):
         self.ui.calibutton.setEnabled(False)
         self.ui.initbttn.clicked.connect(self.initDevices)
         self.ui.loadbttn.clicked.connect(self.loadTF)
-        
         self.ui.combo_TF.currentIndexChanged.connect(self.plotTF)
         
-        
         self.datacache = []
-        
-        
-        
-
-        
-            
-
         self.threadpool = qtc.QThreadPool()
         print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         
         self.toolbar = None
         self.canv = MatplotlibCanvas(self)
-        self.ui.vLayout_plot.addWidget(self.canv)
+        #self.ui.vLayout_plot.addWidget(self.canv)
         self.toolbarTF = None
         self.canvTF = MatplotlibCanvas(self)
-        self.ui.vLayout_TF.addWidget(self.canvTF)
+        #self.ui.vLayout_TF.addWidget(self.canvTF)
     def initDevices(self):
         global dn, fs, dt
         dn = nog.daq()
@@ -151,7 +143,7 @@ class appnog(qtw.QMainWindow):
         except :
             pass
 
-        self.filename = qtw.QFileDialog.getOpenFileName()[0]
+        self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/sensors')[0]
         print("File :", self.filename)
         ii = self.ui.comboBox.currentIndex()
         dn.dev[ii][-1] = self.filename[25:]
@@ -173,7 +165,7 @@ class appnog(qtw.QMainWindow):
         except :
             pass
 
-        self.filename = qtw.QFileDialog.getOpenFileName(directory='~/gordata/DATA')[0]
+        self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/DATA')[0]
         print("File :", self.filename)
         self.datacache = pd.read_csv(self.filename, index_col='t')
         for item in self.datacache.columns:
@@ -215,8 +207,8 @@ class appnog(qtw.QMainWindow):
     def updatePlot(self, plotdata):
         plt.clf()
         try:
-            self.ui.hLayout_plot.removeWidget(self.toolbar)
             self.ui.vLayout_plot.removeWidget(self.canv)
+            self.ui.hLayout_plot.removeWidget(self.toolbar)
             self.toolbar = None
             self.canv = None
         except Exception as e:
