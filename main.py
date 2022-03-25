@@ -1,4 +1,4 @@
-from msilib.schema import Directory
+#from msilib.schema import Directory
 import datanog as nog
 from gui import Ui_MainWindow
 import scipy.signal as signal
