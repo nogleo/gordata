@@ -1,1 +1,1 @@
-# Generic Output Recorder for Data Aquisition and Time-frequency Analisys
+# Generic Open-source Recorder for Data Aquisition and Time-frequency Analisys
