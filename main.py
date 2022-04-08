@@ -168,9 +168,13 @@ class appnog(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/DATA')[0]
         print("File :", self.filename)
         self.datacache = pd.read_csv(self.filename, index_col='t')
+        try:
+            self.ui.combo_TF.clear()
+        except :
+            pass
         for item in self.datacache.columns:
             self.ui.combo_TF.addItem(item)
-        self.ui.combo_TF.setCurrentIndex(0)
+        #self.ui.combo_TF.setCurrentIndex(0)
         #self.plotTF()
 
 
@@ -197,7 +201,7 @@ class appnog(qtw.QMainWindow):
         #self.canvTF.axes.set_title('Time-Frequency - {}'.format(frame))
         try:
             #self.canvTF.axes.pcolormesh(t, f, S_db, shading='gouraud',  cmap='turbo')
-            self.canvTF.axes.imshow(np.flip(S_db,axis=0), aspect='auto', cmap='turbo', extent=[t[0], t[-1], f[0], f[-1]])
+            self.canvTF.axes.imshow(np.flip(S_db,axis=0), aspect='auto', cmap='turbo', interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
         except Exception as e:
             print('warning =>> '+str(e))
             pass
