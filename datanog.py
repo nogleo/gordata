@@ -36,9 +36,9 @@ class daq:
             try:
                 self.bus.read_byte(device)
                 if device == 0x6a:
-                    self.dev.append([device, 0x22, 12, '<hhhhhh',['A_'+'Gx','A_'+'Gy','A_'+'Gz','A_'+'Ax','A_'+'Ay','A_'+'Az'], None])
+                    self.dev.append([device, 0x22, 12, '<hhhhhh',['Gx'+'_1','Gy'+'_1','Gz'+'_1','Ax'+'_1','Ay'+'_1','Az'+'_1'], None])
                 elif device == 0x6b:
-                    self.dev.append([device, 0x22, 12, '<hhhhhh',['B_'+'Gx','B_'+'Gy','B_'+'Gz','B_'+'Ax','B_'+'Ay','B_'+'Az'], None])
+                    self.dev.append([device, 0x22, 12, '<hhhhhh',['Gx'+'_2','Gy'+'_2','Gz'+'_2','Ax'+'_2','Ay'+'_2','Az'+'_2'], None])
                 elif device == 0x36:
                     self.dev.append([device, 0x0C, 2, '>H',['rot'], None])
                 elif device == 0x48:
