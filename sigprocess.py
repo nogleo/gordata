@@ -216,14 +216,28 @@ def TDI(_data):
 def zmean(_data):
     return np.real(ifft(np.vstack((np.zeros((2,_data.shape[1])),fft(_data, axis=0)[2:])), axis=0))
        
-def imu2body(df, t, fs, pos=[0, 0, 0]):
+def imu2body(df, t, fs, pos=[0, 0, 0], method='complementary'):
     gyr = df[:,0:3]
     acc = df[:,3:]
     grv = np.array([[0],[0],[-9.81]])
     alpha = FDD(gyr)
-    accc = acc + np.cross(gyr,np.cross(gyr,pos)) + np.cross(alpha,pos)
+    accc = acc - np.cross(gyr,np.cross(gyr,pos)) - np.cross(gyr,pos)
     q0=ahrs.Quaternion(ahrs.common.orientation.acc2q(accc[0]))
-    imu = ahrs.filters.Complementary(acc=accc, gyr=gyr, frequency=fs, q0=q0, gain=0.001)
+    match method:
+        case 'complementary':
+            imu = ahrs.filters.Complementary(acc=accc, gyr=gyr, frequency=fs, q0=q0, gain=0.001)
+        case 'madgwick':
+            imu = ahrs.filters.Madgwick(acc=accc, gyr=gyr, frequency=fs, q0=q0, gain=0.001)
+        case 'kalman':
+            imu = ahrs.filters.EKF(acc=accc, gyr=gyr, frequency=fs, q0=q0)
+        case 'aqua':
+            imu = ahrs.filters.AQUA(acc=accc, gyr=gyr, frequency=fs, q0=q0, adaptative=True, threshold=0.95)
+        case 'mahony':
+            imu = ahrs.filters.Mahony(acc=accc, gyr=gyr, frequency=fs, q0=q0, k_P=1.0, k_I=0.3)
+
+
+            
+
     theta = ahrs.QuaternionArray(imu.Q).to_angles()
     
     acccc = np.zeros_like(accc)
