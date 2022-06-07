@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Generic Open-source Recorder for Data Acquisition and Time-frequency Analysis
 
 1. Download and flash the [latest Raspberry Pi OS](https://www.raspberrypi.com/software/).
@@ -17,3 +18,14 @@
 
 5. Clone repository with  
     > git clone https://github.com/nogleo/gordata.git 
+=======
+# Generic Open-source Recorder for Data Aquisition and Time-frequency Analisys
+Add/change the following settings in config.txt on boot partition
+
+hdmi_group=2
+hdmi_mode=87
+hdmi_cvt=1024 600 60
+arm_freq=2175
+dtparam=i2c_arm=on,i2c_arm_baudrate=1800000
+#arm_64bit=1
+>>>>>>> f37adfe84c64bb9b4cf5658439e86639fb7ef3c3
