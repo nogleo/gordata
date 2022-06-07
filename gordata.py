@@ -103,3 +103,23 @@ class Daq:
             gyr_KS = gyr_ref@np.linalg.inv(gyr_rot)
 
         return (acc_KS, acc_bias), (gyr_KS, gyr_bias)
+    
+    def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
+        """
+        Args:
+            acc (TYPE, optional): DESCRIPTION. Defaults to None.
+            gyr (TYPE, optional): DESCRIPTION. Defaults to None.
+            fs (TYPE, optional): DESCRIPTION. Defaults to None.
+            acc_param (TYPE, optional): DESCRIPTION. Defaults to None.
+            gyr_param (TYPE, optional): DESCRIPTION. Defaults to None.
+
+        Returns:
+            TYPE: DESCRIPTION.
+            TYPE: DESCRIPTION.
+
+        """
+
+        acc_t = acc_param[0]@(acc.T-acc_param[1])
+        gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
+
+        return acc_t.T, gyr_t.T

@@ -74,7 +74,7 @@ def calibrate_imu(acc=None, gyr=None, Ts=None, Td=None, fs=None):
     return (acc_KS, acc_bias), (gyr_KS, gyr_bias)
 
 
-def translate_imu(array: acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
+def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
     """
 
 
