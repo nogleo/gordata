@@ -113,8 +113,8 @@ q0 = ahrs.common.orientation.acc2q(acc_cal[0, :])
 ekf = ahrs.filters.ekf.EKF(acc=acc_cal,
                            gyr=gyr_cal,
                            q0=q0,
-                           frequency=1666,
-                           noise=[acc_std**2, gyr_std**2, 0.8**2])
+                           frequency=1666)#,
+                           #noise=[acc_std**2, gyr_std**2, 0.8**2])
 theta_ekf = ahrs.QuaternionArray(ekf.Q).to_angles()+np.pi
 
 
