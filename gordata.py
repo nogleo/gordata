@@ -13,7 +13,7 @@ import pandas as pd
 import logging
 
 
-class daq:
+class Daq:
     def __init__(self) -> None:
         self.__name__ = "daq"
         try:
