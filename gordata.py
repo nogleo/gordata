@@ -288,15 +288,15 @@ class Dsp:
             alpha = FDD(gyr)
             accc = acc - np.cross(gyr,np.cross(gyr,pos)) - np.cross(gyr,pos)
             q0=ahrs.Quaternion(ahrs.common.orientation.acc2q(accc[0]))
-            if method is 'complementary':
+            if method == 'complementary':
                     imu = ahrs.filters.Complementary(acc=accc, gyr=gyr, frequency=fs, q0=q0, gain=0.001)
-            elif method is 'madgwick':
+            elif method == 'madgwick':
                 imu = ahrs.filters.Madgwick(acc=accc, gyr=gyr, frequency=fs, q0=q0, gain=0.001)
-            elif method is 'kalman':
+            elif method == 'kalman':
                 imu = ahrs.filters.EKF(acc=accc, gyr=gyr, frequency=fs, q0=q0)
-            elif method is 'aqua':
+            elif method == 'aqua':
                 imu = ahrs.filters.AQUA(acc=accc, gyr=gyr, frequency=fs, q0=q0, adaptative=True, threshold=0.95)
-            elif method is 'mahony':
+            elif method == 'mahony':
                 imu = ahrs.filters.Mahony(acc=accc, gyr=gyr, frequency=fs, q0=q0, k_P=1.0, k_I=0.3)
             else:
                 print('method not found')
