@@ -161,6 +161,7 @@ class app_gd(qtw.QMainWindow):
         self.updatePlot(self.datacache)
         
     def loadTF(self):
+        self.datacache = None
         os.chdir(root)
         try:
             os.chdir('DATA')
