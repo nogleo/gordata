@@ -11,6 +11,8 @@ import numpy as np
 import ahrs
 import matplotlib.pyplot as plt
 
+# %%
+
 
 df = pd.read_csv('./rawdata_m28_0x6a.csv')
 df.columns = [['Gx', 'Gy', 'Gz', 'Ax', 'Ay', 'Az']]
@@ -90,9 +92,12 @@ def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None)
         TYPE: DESCRIPTION.
 
     """
-
-    acc_t = acc_param[0]@(acc.T-acc_param[1])
-    gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
+    acc_t = np.zeros_like(acc)
+    gyr_t = np.zeros_like(gyr)
+    if acc is not None:
+        acc_t = acc_param[0]@(acc.T-acc_param[1])
+    if gyr is not None:
+        gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
 
     return acc_t.T, gyr_t.T
 
@@ -100,9 +105,15 @@ def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None)
 acc_param, gyr_param = calibrate_imu(acc=acc, gyr=gyr, Ts=Ts, Td=Td, fs=fs)
 
 # %%
-df = pd.read_csv('./data_23.csv')
-acc_cal, gyr_cal = translate_imu(acc=df[['B_Ax', 'B_Ay', 'B_Az']].to_numpy(), gyr=df[[
-                                 'B_Gx', 'B_Gy', 'B_Gz']].to_numpy(), acc_param=acc_param, gyr_param=gyr_param)
+acc_cal, gyr_cal = translate_imu(acc=acc[6*Ns+2*Nd:6*Ns+3*Nd, :],
+                                 gyr=gyr[6*Ns+2*Nd:6*Ns+3*Nd, :],
+                                 acc_param=acc_param, gyr_param=gyr_param)
+
+# %%
+# df = pd.read_csv('./data_23.csv')
+# acc_cal, gyr_cal = translate_imu(acc=df[['B_Ax', 'B_Ay', 'B_Az']].to_numpy(),
+#                                  gyr=df[['B_Gx', 'B_Gy', 'B_Gz']].to_numpy(),
+#                                  acc_param=acc_param, gyr_param=gyr_param)
 
 
 # gyr_cal = (gyr_KS@(gyr.T-gyr_bias)).T
@@ -113,12 +124,9 @@ q0 = ahrs.common.orientation.acc2q(acc_cal[0, :])
 ekf = ahrs.filters.ekf.EKF(acc=acc_cal,
                            gyr=gyr_cal,
                            q0=q0,
-                           frequency=1666)#,
-                           #noise=[acc_std**2, gyr_std**2, 0.8**2])
+                           frequency=1666)  # ,
+#                          noise=[acc_std**2, gyr_std**2, 0.8**2])
 theta_ekf = ahrs.QuaternionArray(ekf.Q).to_angles()+np.pi
-
-
-
 
 cf = ahrs.filters.complementary.Complementary(acc=acc_cal,
                                               gyr=gyr_cal,
@@ -127,35 +135,32 @@ cf = ahrs.filters.complementary.Complementary(acc=acc_cal,
                                               gain=0.01)
 theta_cf = ahrs.QuaternionArray(cf.Q).to_angles()
 
-
-
-mck = ahrs.filters.madgwick.Madgwick(acc=acc_cal, 
+mck = ahrs.filters.madgwick.Madgwick(acc=acc_cal,
                                      gyr=gyr_cal,
                                      q0=q0,
                                      frequency=1666,
                                      gain=0.01)
 theta_mck = ahrs.QuaternionArray(mck.Q).to_angles()
 
-
-
 mhn = ahrs.filters.mahony.Mahony(acc=acc_cal,
                                  gyr=gyr_cal,
-                                 q0=q0, 
+                                 q0=q0,
                                  frequency=1666,
                                  k_P=1.0,
                                  k_I=0.3)
 theta_mhn = ahrs.QuaternionArray(mhn.Q).to_angles()
 
-
-
 aqua = ahrs.filters.aqua.AQUA(acc=acc_cal,
                               gyr=gyr_cal,
-                              q0=q0, 
-                              frequency=1666, 
-                              adaptative=True, 
+                              q0=q0,
+                              frequency=1666,
+                              adaptative=True,
                               threshold=0.95)
 theta_aqua = ahrs.QuaternionArray(aqua.Q).to_angles()
 
 angular_rate = ahrs.filters.AngularRate(gyr=gyr_cal,
                                         q0=q0)
 theta_ar = ahrs.QuaternionArray(angular_rate.Q).to_angles()
+
+
+tilt = ahrs.filters.Tilt(acc_cal, as_angles=True).Q

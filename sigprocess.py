@@ -202,16 +202,16 @@ def FDD(_data, factor=1, NFFT=fs):
         Data[ii:ii+n,:] += y
     return np.real(Data)        
 
-def TDI(_data): 
-    N = len(_data)
-    if len(_data.shape)==1:
-        _data = _data.reshape((N,1))
-    _data = zmean(_data)
-    _dataout = np.zeros_like(_data)
-    _dataout[0,:] = _data[0,:]*dt/2
+def TDI(data): 
+    N = len(data)
+    if len(data.shape)==1:
+        data = data.reshape((N,1))
+    data = zmean(data)
+    dataout = np.zeros_like(data)
+    dataout[0,:] = data[0,:]*dt/2
     for ii in range(1,N):
-        _dataout[ii,:] = intg.simpson(_data[0:ii,:], dx=dt, axis=0)
-    return _dataout
+        dataout[ii,:] = intg.simpson(data[0:ii,:], dx=dt, axis=0)
+    return dataout
 
 def zmean(_data):
     return np.real(ifft(np.vstack((np.zeros((2,_data.shape[1])),fft(_data, axis=0)[2:])), axis=0))
