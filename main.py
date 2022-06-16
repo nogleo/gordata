@@ -1,4 +1,5 @@
 #from msilib.schema import Directory
+import gordata as gd
 import datanog as nog
 from gui import Ui_MainWindow
 import scipy.signal as signal
@@ -37,7 +38,7 @@ class Worker(qtc.QRunnable):
         except Exception as e:
             print(e)
 
-class appnog(qtw.QMainWindow):
+class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -67,7 +68,8 @@ class appnog(qtw.QMainWindow):
         #self.ui.vLayout_TF.addWidget(self.canvTF)
     def initDevices(self):
         global dn, fs, dt
-        dn = nog.daq()
+        #dn = nog.daq()
+        dn = gd.Daq()
         
         self.devsens={}
         '''
@@ -356,6 +358,6 @@ class appnog(qtw.QMainWindow):
 
 if __name__ == '__main__':
     app = qtw.QApplication([])
-    widget = appnog()
+    widget = app_gd()
     widget.show()
     app.exec_()
