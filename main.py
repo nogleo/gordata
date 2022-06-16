@@ -178,7 +178,7 @@ class app_gd(qtw.QMainWindow):
         for item in self.datacache.columns:
             self.ui.combo_TF.addItem(item)
         self.ui.combo_TF.setCurrentIndex(0)
-        #self.plotTF()
+        self.plotTF()
 
 
     def plotTF(self):
