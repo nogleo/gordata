@@ -27,21 +27,6 @@ gyr = df[['Gx', 'Gy', 'Gz']].to_numpy()
 
 
 def calibrate_imu(acc=None, gyr=None, Ts=None, Td=None, fs=None):
-    """
-
-
-    Args:
-        acc (TYPE, optional): DESCRIPTION. Defaults to None.
-        gyr (TYPE, optional): DESCRIPTION. Defaults to None.
-        Ts (TYPE, optional): DESCRIPTION. Defaults to None.
-        Td (TYPE, optional): DESCRIPTION. Defaults to None.
-        fs (TYPE, optional): DESCRIPTION. Defaults to None.
-
-    Returns:
-        TYPE: DESCRIPTION.
-
-    """
-
     Ns = Ts*fs
     Nd = Td*fs
 

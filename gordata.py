@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 import logging
 import emd 
 from scipy.fftpack import fft, ifft, fftfreq
+import ssqueezepy as sq
 
 
 class Daq:
@@ -372,11 +373,11 @@ class Dsp:
             # emd.plotting.plot_imfs(Ip,t, scale_y=True, cmap=True)
             # emd.plotting.plot_imfs(If,t, scale_y=True, cmap=True)    
             
-        #def WSST(df, fs, ridge_ext = False):
-        #    t = df.index.to_numpy()
-        #    for frame in df.columns:
-        #        S = df[frame].to_numpy()
-        #        Tw, _, nf, na, *_ = sq.ssq_cwt(S, fs=fs, nv=64, ssq_freqs='linear', maprange='energy')
-        #        vizspect(t, nf, np.abs(Tw), 'WSST - '+frame, ylims=[1, 480])
-        #        if ridge_ext:
-        #           ridge = sq.ridge_extraction.extract_ridges(Tw, bw=4, scales=nf, n_ridges=3)
+        def WSST(df, fs, ridge_ext = False):
+            t = df.index.to_numpy()
+            for frame in df.columns:
+                S = df[frame].to_numpy()
+                Tw, _, nf, na, *_ = sq.ssq_cwt(S, fs=fs, nv=64, ssq_freqs='linear', maprange='energy')
+                vizspect(t, nf, np.abs(Tw), 'WSST - '+frame, ylims=[1, 480])
+                if ridge_ext:
+                   ridge = sq.ridge_extraction.extract_ridges(Tw, bw=4, scales=nf, n_ridges=3)

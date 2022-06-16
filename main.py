@@ -18,6 +18,7 @@ from matplotlib.figure import Figure
 import numpy as np
 import pandas as pd
 import gc
+import logging
 root = os.getcwd()
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -173,21 +174,24 @@ class app_gd(qtw.QMainWindow):
         self.datacache = pd.read_csv(self.filename, index_col='t')
         try:
             self.ui.combo_TF.clear()
-        except :
+        except Exception as e:
+            logging.warning(f"Error: {e}")
             pass
         for item in self.datacache.columns:
             self.ui.combo_TF.addItem(item)
-        self.ui.combo_TF.setCurrentIndex(0)
-        self.plotTF()
+        #self.ui.combo_TF.setCurrentIndex(0)
+        #self.plotTF()
 
 
-    def plotTF(self):
-        frame = str(self.ui.combo_TF.currentText())
-        data = self.datacache[[frame]]
+    def plotTF(self,dataNone, frame=None):
         plt.clf()
+        if frame is None:
+            frame = str(self.ui.combo_TF.currentText())
+        if data is None:
+            data = self.datacache[[frame]]
         try:
-            self.ui.vLayout_TF.removeWidget(self.canvTF)
-            self.ui.hLayout_TF.removeWidget(self.toolbarTF)
+            #self.ui.vLayout_TF.removeWidget(self.canvTF)
+            #self.ui.hLayout_TF.removeWidget(self.toolbarTF)
             self.toolbarTF = None
             self.canvTF = None
         except Exception as e:
