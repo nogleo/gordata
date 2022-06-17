@@ -42,7 +42,8 @@ class Worker(qtc.QRunnable):
 class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        global dsp
+        dsp = gd.dsp()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.msg = ""
@@ -68,9 +69,11 @@ class app_gd(qtw.QMainWindow):
         self.canvTF = MatplotlibCanvas(self)
         #self.ui.vLayout_TF.addWidget(self.canvTF)
     def initDevices(self):
-        global dn, fs, dt
+        global daq, fs, dt
         #dn = nog.daq()
-        dn = gd.Daq()
+        daq = gd.daq()
+        fs = 1666
+        dt = 1/fs
         
         self.devsens={}
         '''
@@ -89,9 +92,9 @@ class app_gd(qtw.QMainWindow):
 
     def pull(self):
         for _dev in self.devsens:
-            dn.config(_dev[0])
-            time.sleep(dn.dt)
-        dn.savedata(dn.pulldata(self.ui.label.text()))
+            daq.config(_dev[0])
+            time.sleep(daq.dt)
+        daq.savedata(daq.pulldata(self.ui.label.text()))
         
         self.ui.startbutton.setEnabled(True)
 
@@ -107,13 +110,13 @@ class app_gd(qtw.QMainWindow):
             self.ui.comboBox.clear()
         except :
             pass
-        for _sens in dn.dev:
+        for _sens in daq.devices:
             self.devsens[str(_sens[0])] = str(_sens[-1])
             self.ui.comboBox.addItem(str(_sens[0])+'--'+str(_sens[-1]))
         print(self.devsens)
 
     def interrupt(self):
-        dn.state = 0
+        daq.state = 0
     
     def getFile(self):
         """ This function will get the address of the csv file location
@@ -133,7 +136,7 @@ class app_gd(qtw.QMainWindow):
             pass
 
     def calib(self):
-        dn.calibrate(dn.dev[self.ui.comboBox.currentIndex()])
+        daq.calibrate(daq.dev[self.ui.comboBox.currentIndex()])
 
     def calibrate(self):
         workal = Worker(self.calib)
@@ -149,10 +152,10 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/sensors')[0]
         print("File :", self.filename)
         ii = self.ui.comboBox.currentIndex()
-        dn.dev[ii][-1] = self.filename[25:]
+        daq.dev[ii][-1] = self.filename[25:]
         self.loadDevices()
         with open(root+'sensors.data', 'wb') as f:
-            pickle.dump(dn.dev, f)
+            pickle.dump(daq.dev, f)
         os.chdir(root)
         np.save('devsens.npy', self.devsens)
 
@@ -179,19 +182,17 @@ class app_gd(qtw.QMainWindow):
             pass
         for item in self.datacache.columns:
             self.ui.combo_TF.addItem(item)
-        #self.ui.combo_TF.setCurrentIndex(0)
+        self.ui.combo_TF.setCurrentIndex(0)
         #self.plotTF()
 
 
-    def plotTF(self,dataNone, frame=None):
-        plt.clf()
-        if frame is None:
-            frame = str(self.ui.combo_TF.currentText())
-        if data is None:
-            data = self.datacache[[frame]]
+    def plotTF(self):
+        plt.clf()        
+        frame = str(self.ui.combo_TF.currentText())
+        data = self.datacache[[frame]]
         try:
-            #self.ui.vLayout_TF.removeWidget(self.canvTF)
-            #self.ui.hLayout_TF.removeWidget(self.toolbarTF)
+            self.ui.vLayout_TF.removeWidget(self.canvTF)
+            self.ui.hLayout_TF.removeWidget(self.toolbarTF)
             self.toolbarTF = None
             self.canvTF = None
         except Exception as e:
@@ -202,7 +203,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.vLayout_TF.addWidget(self.canvTF,10) 
         self.ui.hLayout_TF.addWidget(self.toolbarTF)
         self.canvTF.axes.cla()
-        t, f, S_db = sp.spect(data, 1666, print=False)
+        t, f, S_db = dsp.spect(df=data, print=False)
         self.canvTF.axes.set_xlabel('Time')
         self.canvTF.axes.set_ylabel('Frequency')
         #self.canvTF.axes.set_title('Time-Frequency - {}'.format(frame))
@@ -257,7 +258,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = dn.dev[self.ui.comboBox.currentIndex()]
+        device = daq.dev[self.ui.comboBox.currentIndex()]
         
         
 
@@ -276,7 +277,7 @@ class app_gd(qtw.QMainWindow):
                                                     'Number seconds per Position: ',
                                                     5, 1, 10, 1)
         if ok:
-            self.NS = NS*dn.fs
+            self.NS = NS*daq.fs
             print(self.NS)
         else:
                 print('cancelled')
@@ -286,7 +287,7 @@ class app_gd(qtw.QMainWindow):
                                                     'Number seconds per Rotation: ',
                                                     5, 1, 10,1)
         if ok:
-            self.ND = ND*dn.fs
+            self.ND = ND*daq.fs
             print(self.ND)
         else:
                 print('cancelled')
@@ -304,10 +305,10 @@ class app_gd(qtw.QMainWindow):
                 
                 while i<(ii+1)*self.NS:
                     tf=time.perf_counter()
-                    if tf-ti>=dn.dt:
+                    if tf-ti>=daq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(dn.pull(device))
+                            self.calibrationdata[i,:] = np.array(daq.pull(device))
                             i+=1
                         except Exception as e:
                             print(e)
@@ -330,10 +331,10 @@ class app_gd(qtw.QMainWindow):
                 ti = tf = time.perf_counter()
                 while i<(6*self.NS+((ii+1)*self.ND)):
                     tf=time.perf_counter()
-                    if tf-ti>=dn.dt:
+                    if tf-ti>=daq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(dn.pull(device))
+                            self.calibrationdata[i,:] = np.array(daq.pull(device))
                             i+=1
                         except Exception as e:
                             print(e)
@@ -350,8 +351,8 @@ class app_gd(qtw.QMainWindow):
         df = pd.DataFrame(self.calibrationdata)
         df.to_csv(_path, index=False)
         #self.updatePlot(self.calibrationdata)
-        sensor['acc_p'] = dn.calibacc(self.calibrationdata[0:6*self.NS,3:6], self.NS)
-        sensor['gyr_p'] = dn.calibgyr(self.calibrationdata[:,0:3], self.NS, self.ND) 
+        sensor['acc_p'] = daq.calibacc(self.calibrationdata[0:6*self.NS,3:6], self.NS)
+        sensor['gyr_p'] = daq.calibgyr(self.calibrationdata[:,0:3], self.NS, self.ND) 
         sensorframe = pd.DataFrame(sensor, columns=[ 'acc_p', 'gyr_p'])
         sensorframe.to_csv('{}.csv'.format(sensor['name']))     
         np.savez(sensor['name'], sensor['gyr_p'], sensor['acc_p'])

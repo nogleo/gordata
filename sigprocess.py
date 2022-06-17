@@ -162,8 +162,8 @@ def FDI(data, factor=1, NFFT=fs//4):
 #         plt.tight_layout()
 #         plt.show()
 
-def spect(df,fs, dbmin=80, print=True, freqlims=(1,480)):
-    for frame in df:
+def spect(df,fs, dbmin=80, print=True, freqlims=(1,fs/2)):
+    for frame in df.columns:
         f, t, Sxx = scipy.signal.spectrogram(df[frame], fs=fs, axis=0, scaling='spectrum', nperseg=fs//2, noverlap=fs//4, detrend=False, mode='psd', window='hann')
         Sxx[Sxx==0] = 10**(-20)
         if print==True:
