@@ -26,7 +26,7 @@ acc = df[['Ax', 'Ay', 'Az']].to_numpy()
 gyr = df[['Gx', 'Gy', 'Gz']].to_numpy()
 
 
-def calibrate_imu(acc=None, gyr=None, Ts=None, Td=None, fs=None):
+def calibrate_imu(acc:=None, gyr=None, Ts=None, Td=None, fs:=None):
     Ns = Ts*fs
     Nd = Td*fs
 
