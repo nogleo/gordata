@@ -2,14 +2,11 @@
 import gordata as gd
 import datanog as nog
 from gui import Ui_MainWindow
-import scipy.signal as signal
 import os
 import time
 import pickle
-import sigprocess as sp
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
-from PyQt5 import Qt as qt
 import matplotlib
 import matplotlib.pyplot as plt
 matplotlib.use('Qt5Agg')
