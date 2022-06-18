@@ -1,4 +1,4 @@
-#from msilib.schema import Directory
+#from mpip
 import gordata as gd
 import datanog as nog
 from gui import Ui_MainWindow

@@ -11,9 +11,8 @@ import scipy.integrate as intg
 import ahrs
 from matplotlib import pyplot as plt
 import logging
-import emd 
 from scipy.fftpack import fft, ifft, fftfreq
-import ssqueezepy as sq
+
 
 
 class daq:
@@ -259,8 +258,8 @@ class dsp:
         dataout = np.zeros_like(data)
         dataout[0,:] = data[0,:]*self.dt/2
         for ii in range(1,N):
-            #dataout[ii,:] = intg.simpson(data[0:ii,:], dx=self.dt, axis=0)
-            dataout[ii,:] = intg.trapz(data[0:ii,:], dx=self.dt, axis=0)
+            dataout[ii,:] = intg.simpson(data[0:ii,:], dx=self.dt, axis=0)
+            #dataout[ii,:] = intg.trapz(data[0:ii,:], dx=self.dt, axis=0)
         return dataout
 
     def zmean(self, _data):
@@ -339,26 +338,4 @@ class dsp:
         
         
         
-    def apply_emd(self, df, fs):
-        t = df.index.to_numpy()
-        mfreqs = np.array([360,300,240,180,120,90,60,30,15,7.5])
-        for frame in df.columns:
-            S = df[frame].to_numpy()
-            
-        imf, _ = emd.sift.mask_sift(S, mask_freqs=mfreqs/fs,  mask_amp_mode='ratio_sig', ret_mask_freq=True, nphases=8, mask_amp=S.max())
-        Ip, If, Ia = emd.spectra.frequency_transform(imf, fs, 'nht')
-        emd.plotting.plot_imfs(imf,t, scale_y=True, cmap=True)
-        plt.suptitle('IMFs - {}'.format(frame))
-        emd.plotting.plot_imfs(Ia,t, scale_y=True, cmap=True)
-        plt.suptitle(' Envelope - {}'.format(frame))
-        # emd.plotting.plot_imfs(Ip,t, scale_y=True, cmap=True)
-        # emd.plotting.plot_imfs(If,t, scale_y=True, cmap=True)    
-        
-    def WSST(self, df, fs, ridge_ext = False):
-        t = df.index.to_numpy()
-        for frame in df.columns:
-            S = df[frame].to_numpy()
-            Tw, _, nf, na, *_ = sq.ssq_cwt(S, fs=fs, nv=64, ssq_freqs='linear', maprange='energy')
-            self.vizspect(t, nf, np.abs(Tw), 'WSST - '+frame, ylims=[1, 480])
-            if ridge_ext:
-                ridge = sq.ridge_extraction.extract_ridges(Tw, bw=4, scales=nf, n_ridges=3)
+    
