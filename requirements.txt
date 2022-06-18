@@ -1,11 +1,7 @@
 AHRS==0.3.1
-emd==0.5.5
-ghostipy==0.2.1
 matplotlib==3.5.1
 numpy==1.21.5
 pandas==1.4.2
-PyEMD==0.5.1
 PyQt5==5.15.6
 scipy==1.8.0
 smbus==1.1.post2
-ssqueezepy==0.6.3
