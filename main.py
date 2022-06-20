@@ -86,10 +86,10 @@ class app_gd(qtw.QMainWindow):
         self.ui.calibutton.setEnabled(True)
 
     def pull(self):
-        for _dev in self.devsens:
-            daq.config(_dev[0])
+        for addr in daq.devices_list:
+            daq.set_device(addr, daq.devices_config[addr])
             time.sleep(daq.dt)
-        daq.savedata(daq.pulldata(self.ui.label.text()))
+        daq.save_data(daq.pull_data(durr=float(self.ui.label.text())))
         
         self.ui.startbutton.setEnabled(True)
 
@@ -253,7 +253,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = daq.dev[self.ui.comboBox.currentIndex()]
+        device = daq.devices_config[self.ui.comboBox.currentIndex()]
         
         
 
@@ -303,7 +303,7 @@ class app_gd(qtw.QMainWindow):
                     if tf-ti>=daq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(daq.pull(device))
+                            self.calibrationdata[i,:] = np.array(daq.pull_data(durr=daq.dt, devices=device))
                             i+=1
                         except Exception as e:
                             print(e)
@@ -329,7 +329,7 @@ class app_gd(qtw.QMainWindow):
                     if tf-ti>=daq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(daq.pull(device))
+                            self.calibrationdata[i,:] = np.array(daq.pull_data(durr=daq.dt, devices=device))
                             i+=1
                         except Exception as e:
                             print(e)
@@ -346,8 +346,14 @@ class app_gd(qtw.QMainWindow):
         df = pd.DataFrame(self.calibrationdata)
         df.to_csv(_path, index=False)
         #self.updatePlot(self.calibrationdata)
-        sensor['acc_p'] = daq.calibacc(self.calibrationdata[0:6*self.NS,3:6], self.NS)
-        sensor['gyr_p'] = daq.calibgyr(self.calibrationdata[:,0:3], self.NS, self.ND) 
+        sensor['acc_p'], sensor['gyr_p'] = daq.calibrate_imu(acc=self.calibrationdata[0:6*self.NS,3:6],
+                                                            gyr=self.calibrationdata[:,0:3],
+                                                            Ts=self.NS*daq.fs,
+                                                            Td=self.ND*daq.fs,
+                                                            fs=daq.fs)
+                                                            
+        #sensor['acc_p'],  = daq.calibacc(self.calibrationdata[0:6*self.NS,3:6], self.NS)
+        #sensor['gyr_p'] = daq.calibgyr(self.calibrationdata[:,0:3], self.NS, self.ND) 
         sensorframe = pd.DataFrame(sensor, columns=[ 'acc_p', 'gyr_p'])
         sensorframe.to_csv('{}.csv'.format(sensor['name']))     
         np.savez(sensor['name'], sensor['gyr_p'], sensor['acc_p'])

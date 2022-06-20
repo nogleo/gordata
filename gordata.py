@@ -46,18 +46,14 @@ class daq:
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
                     self.devices_config[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
-                    _settings = [[0x10, (self.odr << 4 | self.range[0] << 2 | 1 << 1)],
+                    settings = [[0x10, (self.odr << 4 | self.range[0] << 2 | 1 << 1)],
                                  [0x11, (self.odr << 4 | self.range[1] << 2)],
                                  [0x12, 0x44],
                                  [0x13, 1 << 1],
                                  [0x15, 0b011],
                                  [0X17, (0b000 << 5)]]  # [0x44 is hardcoded acording to LSM6DSO datasheet]
-                    for _set in _settings:
-                        try:
-                            self.bus.write_byte_data(address, _set[0], _set[1])
-
-                        except Exception as e:
-                            logging.warning("ERROR: ", e)
+                    self.set_device(address, settings)
+                        
                 elif address == 0x48:
                     self.devices_config[address] = [
                         0x00, 2, '>h', ['cur'], None]
@@ -75,8 +71,20 @@ class daq:
             except:
                 logging.warning(f"can`t connect address: {address}")
                 pass
+    def set_device(self, address: int, settings: list):
+        for set in settings:
+            try:
+                self.bus.write_byte_data(address, set[0], set[1])
 
-    def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None):
+            except Exception as e:
+                logging.warning("ERROR: ", e)
+                return False
+        
+        return True
+
+
+
+    def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None) -> tuple or bool: 
         Ns: int = Ts*fs
         Nd: int = Td*fs
         
@@ -107,20 +115,24 @@ class daq:
             # gyr_ref = (gyr_rot>1000)*np.pi + (gyr_rot<-1000)*-np.pi
             gyr_ref = ((gyr_rot > 100)*np.pi + (gyr_rot < -100)*-np.pi)/(Nd/fs)
             gyr_KS = gyr_ref@np.linalg.inv(gyr_rot)
-            try:
-                pd.DataFrame([acc_KS, acc_bias, gyr_KS, gyr_bias]).to_csv('./sensors/'+name+'.csv')
-                return True
-            except:
-                logging.warning("ERROR: unable to save calibration data")
-                return False
-    
+            if name is not None:
+                try:
+                    pd.DataFrame([acc_KS, acc_bias, gyr_KS, gyr_bias]).to_csv('./sensors/'+name+'.csv')
+                    return True
+                except:
+                    logging.warning("ERROR: unable to save calibration data")
+                    return False
+            else:
+                return (acc_KS, acc_bias), (gyr_KS, gyr_bias)        
     def translate_imu(self, acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
 
         return acc_t.T, gyr_t.T
 
-    def pull_data(self, durr: float=None) -> queue.Queue:
+    def pull_data(self, durr: float=None, devices=None) -> queue.Queue:
+        if devices is None:
+            self.devices_config
         q = queue.Queue()
         self.daq_running = True
         t0=ti = time.perf_counter()
@@ -128,7 +140,7 @@ class daq:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
-                for addr, val in self.devices:
+                for addr, val in devices:
                     try:
                         self.queue.put(self.bus.read_i2c_block_data(addr, val[0], val[1], val[2]))               
                         
