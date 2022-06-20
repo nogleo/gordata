@@ -33,8 +33,8 @@ class daq:
         self.devices_config: dict = {}
         self.fs = 1666  # sampling frequency
         self.dt = 1/self.fs  # sampling period
-        self.daq_running = False
-        self.daq_raw = False
+        self.running = False
+        self.raw = False
         self.data_rate = 9  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range = [1, 3]  # [16G, 2000DPS]
         self.queue = queue.Queue()
@@ -71,7 +71,7 @@ class daq:
             except:
                 logging.warning(f"can`t connect address: {address}")
                 pass
-    def set_device(self, address: int, settings: list):
+    def set_device(self, address: int, settings: list): 
         for set in settings:
             try:
                 self.bus.write_i2c_block_data(address, set[0], set[1])
@@ -122,7 +122,8 @@ class daq:
                     logging.warning("ERROR: unable to save calibration data")
                     return False
             else:
-                return (acc_KS, acc_bias), (gyr_KS, gyr_bias)        
+                return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
+
     def translate_imu(self, acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
@@ -133,18 +134,18 @@ class daq:
         if devices is None:
             self.devices_config
         q = queue.Queue()
-        self.daq_running = True
+        self.running = True
         t0 = ti = tf = time.perf_counter()
-        while self.daq_running and tf-t0<= durr:
+        while self.running and tf-t0<= durr:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
                 for addr, val in devices:
                     try:
-                        self.queue.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
+                        q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
                         
                     except Exception as e:
-                        self.queue.put((np.NaN,)*val[2])
+                        q.put((np.NaN,)*val[2])
                         logging.warning("Could not pull data. Error: ", exc_info=e)
                 
         t1 = time.perf_counter()

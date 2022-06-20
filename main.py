@@ -111,7 +111,7 @@ class app_gd(qtw.QMainWindow):
         print(self.devsens)
 
     def interrupt(self):
-        daq.state = 0
+        daq.running = 0
     
     def getFile(self):
         """ This function will get the address of the csv file location
@@ -129,13 +129,6 @@ class app_gd(qtw.QMainWindow):
             self.readData()
         except Exception:
             pass
-
-    def calib(self):
-        daq.calibrate(daq.dev[self.ui.comboBox.currentIndex()])
-
-    def calibrate(self):
-        workal = Worker(self.calib)
-        self.threadpool.start(workal)
 
     def linkSens(self):
         os.chdir(root)
