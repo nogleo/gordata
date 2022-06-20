@@ -253,7 +253,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = daq.devices_config[self.ui.comboBox.currentIndex()]
+        device = daq.devices_config[self.ui.comboBox.currentText()]
         
         
 
