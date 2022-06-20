@@ -159,6 +159,7 @@ class daq:
             for addr, val in self.devices_config:
                 columns = []
                 columns.append(val[-2])
+                data[addr] = []
             while q.size() > 0:
                 for addr, val in self.devices_config:
                     data[addr].append(unpack(val[2], bytearray(q.get())))
