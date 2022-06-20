@@ -135,7 +135,7 @@ class daq:
             self.devices_config
         q = queue.Queue()
         self.daq_running = True
-        t0=ti = time.perf_counter()
+        t0 = ti = tf = time.perf_counter()
         while self.daq_running and tf-t0<= durr:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
