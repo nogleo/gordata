@@ -29,6 +29,8 @@ class daq:
         self.root: str = os.getcwd()
         self.sessionname: str = None
         self.devices: dict = {}
+        self.devices_list: list = []
+        self.devices_config: dict = {}
         self.fs = 1666  # sampling frequency
         self.dt = 1/self.fs  # sampling period
         self.daq_running = False

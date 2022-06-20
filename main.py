@@ -105,9 +105,9 @@ class app_gd(qtw.QMainWindow):
             self.ui.comboBox.clear()
         except :
             pass
-        for _sens in daq.devices:
-            self.devsens[str(_sens[0])] = str(_sens[-1])
-            self.ui.comboBox.addItem(str(_sens[0])+'--'+str(_sens[-1]))
+        for address in daq.devices_list:
+            self.devsens[str(address)] = str(daq.devices_config[address][-1])
+            self.ui.comboBox.addItem(str(address)+'--'+str(daq.devices_config[address][-1]))
         print(self.devsens)
 
     def interrupt(self):
