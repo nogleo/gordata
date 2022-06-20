@@ -46,8 +46,8 @@ class daq:
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
                     self.devices_config[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
-                    settings = [[0x10, (self.odr << 4 | self.range[0] << 2 | 1 << 1)],
-                                 [0x11, (self.odr << 4 | self.range[1] << 2)],
+                    settings = [[0x10, (self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)],
+                                 [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
                                  [0x12, 0x44],
                                  [0x13, 1 << 1],
                                  [0x15, 0b011],
@@ -75,9 +75,8 @@ class daq:
         for set in settings:
             try:
                 self.bus.write_byte_data(address, set[0], set[1])
-
-            except Exception as e:
-                logging.warning("ERROR: ", e)
+            except:
+                logging.warning(f"Could not set device {address}.")
                 return False
         
         return True
@@ -142,24 +141,28 @@ class daq:
                 ti = time.perf_counter()
                 for addr, val in devices:
                     try:
-                        self.queue.put(self.bus.read_i2c_block_data(addr, val[0], val[1], val[2]))               
+                        self.queue.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
                         
                     except Exception as e:
                         self.queue.put((np.NaN,)*val[2])
-                        logging.warning("Could not pull data. Error: ", e)
+                        logging.warning("Could not pull data. Error: ", exc_info=e)
                 
         t1 = time.perf_counter()
         logging.debug("Pulled data in %.6f s" % (t1-t0))
+        if raw is False:
+            return 
         return self.dequeue_data(q)
 
     def dequeue_data(self, q: queue=None) -> pd.DataFrame:
         data = {}
-        if q is None:
-            while q.size() > 0:
+        if q is not None:
+            for addr, val in self.devices_config:
                 columns = []
+                columns.append(val[-2])
+            while q.size() > 0:
                 for addr, val in self.devices_config:
-                    data[addr].append(unpack(val[3], q.get()))
-                    columns.append(val[-2])
+                    data[addr].append(unpack(val[2], q.get()))
+                    
         return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
 
     def save_data(self, df: pd.DataFrame):
@@ -186,7 +189,7 @@ class dsp:
         self.dt = 1/self.fs
 
     def PSD(self, df, fs, units='unid.', fig=None, line='-', linewidth=1, S_ref=1):
-        f, Pxx = scipy.signal.welch(df, fs, nperseg=fs//4, noverlap=fs//8, window='hann', average='mean', scaling='density', detrend=False, axis=0)
+        f, Pxx = signal.welch(df, fs, nperseg=fs//4, noverlap=fs//8, window='hann', average='mean', scaling='density', detrend=False, axis=0)
         if fig==None:
             fig=plt.figure()
         plt.subplot(211)
@@ -218,12 +221,12 @@ class dsp:
             width = 0
         _data = np.vstack((np.zeros((2*n,width)), data, np.zeros((2*n,width))))
         N = len(_data)
-        w = scipy.signal.windows.hann(n).reshape((n,1))
+        w = scipy.windows.hann(n).reshape((n,1))
         Data = np.zeros_like(_data, dtype=complex)
         for ii in range(0, N-n, n//2):
             Y = _data[ii:ii+n,:]*w
-            k =  (1j*2*np.pi*scipy.fft.fftfreq(len(Y), self.dt).reshape((n,1)))
-            y = (scipy.fft.ifft(np.vstack((np.zeros((factor,width)),scipy.fft.fft(Y, axis=0)[factor:]/(k[factor:]))), axis=0))
+            k =  (1j*2*np.pi*fftfreq(len(Y), self.dt).reshape((n,1)))
+            y = (ifft(np.vstack((np.zeros((factor,width)),scipy.fft.fft(Y, axis=0)[factor:]/(k[factor:]))), axis=0))
             Data[ii:ii+n,:] += y
         return np.real(Data[2*n:-2*n,:])
         
