@@ -71,7 +71,7 @@ class daq:
                         0x0C, 2, '>H', ['rot'], None]
 
             except:
-                logging.warning("ERROR ")
+                logging.warning(f"can`t connect address: {address}")
                 pass
 
     def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None):
