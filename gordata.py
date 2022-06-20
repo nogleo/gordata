@@ -130,7 +130,7 @@ class daq:
 
         return acc_t.T, gyr_t.T
 
-    def pull_data(self, durr: float=None, devices=None) -> queue.Queue:
+    def pull_data(self, durr: float=None, devices=None, raw=True) -> queue.Queue:
         if devices is None:
             self.devices_config
         q = queue.Queue()
@@ -157,10 +157,10 @@ class daq:
         if q is None:
             while q.size() > 0:
                 columns = []
-                for addr, val in self.devices:
+                for addr, val in self.devices_config:
                     data[addr].append(unpack(val[3], q.get()))
                     columns.append(val[-2])
-        return self.save_data(pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns))
+        return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
 
     def save_data(self, df: pd.DataFrame):
         if self.sessionname is not None:
