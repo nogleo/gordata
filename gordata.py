@@ -72,6 +72,7 @@ class daq:
 
             except Exception as e:
                 logging.warning("ERROR ", e)
+                pass
 
     def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None):
         Ns: int = Ts*fs

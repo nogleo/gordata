@@ -10,9 +10,7 @@ import pandas as pd
 import numpy as np
 import ahrs
 import matplotlib.pyplot as plt
-
-# %%
-
+import scipy.signal as signal
 
 df = pd.read_csv('./rawdata_m28_0x6a.csv')
 df.columns = [['Gx', 'Gy', 'Gz', 'Ax', 'Ay', 'Az']]
@@ -25,25 +23,30 @@ Td = 5
 acc = df[['Ax', 'Ay', 'Az']].to_numpy()
 gyr = df[['Gx', 'Gy', 'Gz']].to_numpy()
 
-def calibrate_imu(acc:=None, gyr=None, Ts=None, Td=None, fs=None):
+# %%
+
+
+def calibrate_imu(acc=None, gyr=None, Ts=None, Td=None, fs=None):
     Ns = Ts*fs
     Nd = Td*fs
 
     if acc is not None:
         acc_mean = np.array([np.mean(acc[Ns*n:Ns*(n+1)-1], axis=0)
                             for n in range(6)]).T
-        acc_bias = np.array(
-            [(acc_mean[n, :].max()+acc_mean[n, :].min())/2 for n in range(3)], ndmin=2).T
+        acc_bias = np.array([(acc_mean[n, :].max()+acc_mean[n, :].min())/2
+                             for n in range(3)], ndmin=2).T
         acc_ub = acc_mean-acc_bias
         acc_grv = (acc_ub > 1000)*9.81 + (acc_ub < -1000)*-9.81
         acc_KS = acc_grv@np.linalg.pinv(acc_ub)
+        acc_d = acc[6*Ns:, :]-acc_bias.T
+        acc_proj = np.arccos(acc_d/np.linalg.norm(acc_d, axis=1, keepdims=True))
 
     if gyr is not None:
         gyr_mean = np.array([np.mean(gyr[Ns*n:Ns*(n+1)-1], axis=0)
                             for n in range(6)]).T
         gyr_bias = np.mean(gyr[:6*Ns, :], axis=0).reshape((3, 1))
         gyr_rot = np.zeros_like(gyr_mean)
-        #gyr_ub = gyr_mean-gyr_bias
+        # gyr_ub = gyr_mean-gyr_bias
         # gyr_KS = (np.ones_like(gyr_ub)*gyr_std)@np.linalg.pinv(gyr_ub)
 
         gyr_d = gyr[6*Ns:, :]-gyr_bias.T
@@ -60,7 +63,7 @@ def calibrate_imu(acc:=None, gyr=None, Ts=None, Td=None, fs=None):
     return (acc_KS, acc_bias), (gyr_KS, gyr_bias)
 
 
-def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
+def translate_imu(acc=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
     """
 
 
@@ -87,11 +90,13 @@ def translate_imu(acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None)
 
 
 acc_param, gyr_param = calibrate_imu(acc=acc, gyr=gyr, Ts=Ts, Td=Td, fs=fs)
+acc_cal, gyr_cal = translate_imu(acc=acc,
+                                 gyr=gyr,
+                                 acc_param=acc_param, gyr_param=gyr_param)
 
 # %%
-acc_cal, gyr_cal = translate_imu(acc=acc[6*Ns+2*Nd:6*Ns+3*Nd, :],
-                                 gyr=gyr[6*Ns+2*Nd:6*Ns+3*Nd, :],
-                                 acc_param=acc_param, gyr_param=gyr_param)
+
+
 
 # %%
 # df = pd.read_csv('./data_23.csv')
