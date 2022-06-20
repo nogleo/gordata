@@ -130,7 +130,7 @@ class daq:
 
         return acc_t.T, gyr_t.T
 
-    def pull_data(self, durr: float=None, devices=None, raw=True) -> queue.Queue:
+    def pull_data(self, durr: float=None, devices=None, raw=True):
         if devices is None:
             self.devices_config
         q = queue.Queue()
@@ -145,7 +145,7 @@ class daq:
                         q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
                         
                     except Exception as e:
-                        q.put((np.NaN,)*val[2])
+                        q.put((0,)*val[1])
                         logging.warning("Could not pull data. Error: ", exc_info=e)
                 
         t1 = time.perf_counter()
