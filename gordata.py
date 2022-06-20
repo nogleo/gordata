@@ -161,7 +161,7 @@ class daq:
                 columns.append(val[-2])
             while q.size() > 0:
                 for addr, val in self.devices_config:
-                    data[addr].append(unpack(val[2], q.get()))
+                    data[addr].append(unpack(val[2], bytearray(q.get())))
                     
         return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
 
