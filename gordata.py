@@ -74,7 +74,7 @@ class daq:
     def set_device(self, address: int, settings: list):
         for set in settings:
             try:
-                self.bus.write_byte_data(address, set[0], set[1])
+                self.bus.write_i2c_block_data(address, set[0], set[1])
             except:
                 logging.warning(f"Could not set device {address}.")
                 return False
