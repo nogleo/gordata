@@ -70,8 +70,8 @@ class daq:
                     self.devices_config[address] = [
                         0x0C, 2, '>H', ['rot'], None]
 
-            except Exception as e:
-                logging.warning("ERROR ", e)
+            except:
+                logging.warning("ERROR ")
                 pass
 
     def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None):
