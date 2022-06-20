@@ -75,6 +75,7 @@ class daq:
         for set in settings:
             try:
                 self.bus.write_i2c_block_data(address, set[0], set[1])
+                logging.warning(f"Set device {address}.")
             except:
                 logging.warning(f"Could not set device {address}.")
                 return False

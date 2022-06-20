@@ -89,7 +89,7 @@ class app_gd(qtw.QMainWindow):
         for addr in daq.devices_list:
             daq.set_device(addr, daq.devices_config[addr])
             time.sleep(daq.dt)
-        daq.save_data(daq.pull_data(durr=float(self.ui.label.text())))
+        daq.save_data(daq.pull_data(durr=float(self.ui.label.text()), devices=daq.devices_config))
         
         self.ui.startbutton.setEnabled(True)
 
