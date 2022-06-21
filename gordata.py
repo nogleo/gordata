@@ -68,9 +68,9 @@ class daq:
     
 
     def set_device(self, address: int, settings) -> bool: 
-        for set in settings:
+        for reg, value in settings:
             try:
-                self.bus.write_byte_data(address, set[0], bytearray(set[1]))
+                self.bus.write_byte_data(address, reg, value)
                 logging.info("Set device address: : 0x%02X", address)
             except Exception as e:
                 logging.warning("Could not set device address: : 0x%02X", address, exc_info=e)
@@ -147,7 +147,7 @@ class daq:
             return 
         return self.dequeue_data(q)
 
-    def dequeue_data(self, q: queue=None) -> pd.DataFrame:
+    def dequeue_data(self, q: queue.Queue()=None) -> pd.DataFrame():
         data = {}
         if q is not None:
             for addr, val in self.devices.items():
