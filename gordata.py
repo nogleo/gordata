@@ -193,11 +193,12 @@ class daq:
         except Exception as e:
             logging.debug("can`t list path", exc_info=e)
             os.mkdir(path)
+            pass
         try:
             df.to_csv(path+'data_%2i.csv' % num)
             return True
         except:
-            logging.warning("Could not save"+path+'data_%2i.csv' % num)
+            logging.warning('Could not savedata_%2i.csv' % num)
             return False
 
 
