@@ -91,7 +91,7 @@ class app_gd(qtw.QMainWindow):
             time.sleep(dq.dt)
         
         dq.save_data(dq.pull_data(durr=float(self.ui.label.text())))
-        
+        dq.running = True
         self.ui.startbutton.setEnabled(True)
 
     def collect(self):
