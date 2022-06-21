@@ -86,8 +86,8 @@ class app_gd(qtw.QMainWindow):
         self.ui.calibutton.setEnabled(True)
 
     def pull(self):
-        for addr in dq.devices:
-            dq.set_device(addr, dq.devices[addr])
+        for addr in dq.devices.keys():
+            dq.set_device(addr)
             time.sleep(dq.dt)
         dq.running = True
         dq.save_data(dq.pull_data(durr=float(self.ui.label.text()), devices=dq.devices))

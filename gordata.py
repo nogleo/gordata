@@ -75,8 +75,8 @@ class daq:
     def set_device(self, address: int) -> bool: 
         try:
             for reg, value in self.settings[address].items():
-                self.bus.write_byte_data(address, reg, value)
-                logging.info("Set device address: : 0x%02X", address)
+                self.bus.write_byte_data(address, reg, value)    
+            logging.info("Set device address: : 0x%02X", address)
         except Exception as e:
             logging.debug("Could not set device address: : 0x%02X", address, exc_info=e)
             return False
