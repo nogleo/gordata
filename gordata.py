@@ -13,9 +13,6 @@ import ahrs
 from matplotlib import pyplot as plt
 import logging
 from scipy.fftpack import fft, ifft, fftfreq
-
-
-
 class daq:
     def __init__(self):
         self.__name__ = "daq"
@@ -71,7 +68,6 @@ class daq:
             except:
                 logging.debug("can`t connect address: : 0x%02X", address)
                 pass
-    
 
     def set_device(self, address: int) -> bool: 
         try:
@@ -82,8 +78,6 @@ class daq:
             logging.debug("Could not set device address: : 0x%02X", address, exc_info=e)
             return False
         return True
-
-
 
     def calibrate_imu(self, acc: np.array=None, gyr: np.array=None, Ts: float=None, Td: float=None, fs: float=None, name: str=None) -> tuple or bool: 
         Ns: int = Ts*fs
@@ -125,7 +119,6 @@ class daq:
     def translate_imu(self, acc: np.array=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
-
         return acc_t.T, gyr_t.T
 
     def pull_data(self, durr: float=None, devices=None, raw=True):
@@ -368,19 +361,6 @@ class dsp:
 
 
 
-    def vizspect(self, tt, ff, Sxx, Title, xlims=None, ylims=None, fscale='linear'):
-        fig = plt.figure() 
-        ax = fig.add_subplot(111)
-        plt.yscale(fscale)
-        spec = ax.imshow(Sxx, aspect='auto', cmap='turbo', extent=[tt[0], tt[-1], ff[0], ff[-1]])
-        plt.colorbar(spec)
-        ax.set_xlim(xlims)
-        ax.set_ylim(ylims)
-        ax.set_title(Title)
-        ax.set_xlabel('Time [s]')
-        ax.set_ylabel('Frequency [Hz]')        
-        fig.show()
-        
-        
+
         
     
