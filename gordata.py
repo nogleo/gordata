@@ -29,8 +29,8 @@ class daq:
         # list of variables
         self.root: str = os.getcwd()
         self.sessionname: str = None
-        self.devices: dict = {}
-        self.settings: dict = {}
+        self.devices: dict(list) = {}
+        self.settings: dict(dict) = {}
         self.fs: float = 1666  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
@@ -56,29 +56,30 @@ class daq:
                                      0x13: 1 << 1,
                                      0x15: 0b011,
                                      0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
-                    self.set_device(address, settings)
+                    self.set_device(address)
                         
                 elif address == 0x48:
                     self.devices[address] = [0x00, 2, '>h', ['cur'], None]
                     config = (3 << 9 | 0 << 8 | 4 << 5 | 3)
-                    settings = {0x01: [(config >> 8 & 0xFF), (config & 0xFF)]}
-                    self.set_device(address, settings)
+                    self.settings[address] = {0x01: [(config >> 8 & 0xFF), (config & 0xFF)]}
+                    self.set_device(address)
                 elif address == 0x36:
                     self.devices[address] = [0x0C, 2, '>H', ['rot'], None]
+                    self.settings[address] = []
 
             except:
                 logging.debug("can`t connect address: : 0x%02X", address)
                 pass
     
 
-    def set_device(self, address: int, settings: dict) -> bool: 
-        for reg, value in settings.items():
-            try:
+    def set_device(self, address: int) -> bool: 
+        try:
+            for reg, value in self.settings[address].items():
                 self.bus.write_byte_data(address, reg, value)
                 logging.info("Set device address: : 0x%02X", address)
-            except Exception as e:
-                logging.warning("Could not set device address: : 0x%02X", address, exc_info=e)
-                return False
+        except Exception as e:
+            logging.debug("Could not set device address: : 0x%02X", address, exc_info=e)
+            return False
         return True
 
 
