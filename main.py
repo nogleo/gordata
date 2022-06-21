@@ -57,7 +57,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.initbttn.clicked.connect(self.initDevices)
         self.ui.loadbttn.clicked.connect(self.loadTF)
         self.ui.combo_TF.currentIndexChanged.connect(self.plotTF)
-
+        self.data_buffer: pd.DataFrame = pd.DataFrame()
         self.datacache = []
         self.threadpool = qtc.QThreadPool()
         logging.debug("Multithreading with maximum %d threads" %

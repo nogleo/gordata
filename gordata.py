@@ -171,24 +171,24 @@ class daq:
                         #logging.debug("Dequeuing data to {} and {}".format(addr, val))
                         data[addr].append(unpack(val[2], bytearray(qq)))
                     else:
-                        logging.info('dequeue data error, repeat last value')
-                        data[addr].append(data[addr][-1])
-                        #data[addr].append((np.NaN,)*val[1])
+                        logging.info('dequeue data error, atribute NaN')
+                        data[addr].append((np.NaN,)*(val[1]//2))
             for addr, val in self.devices.items():  #block translate from raw to meaningful data
                 if val[-1] is not None:
                     if addr == 0x6a or addr == 0x6b:
                         params = pd.read_csv('./sensors/'+val[-1]+'.csv')
                         array = np.array(data[addr])
                         data[addr] = self.translate_imu(acc=array[:,3:],
-                                                        gyr=data[addr][:][0:3],
+                                                        gyr=array[:,:3],
                                                         fs=self.fs,
-                                                        gyr_param=(params[2], params[3]),
-                                                        acc_param=(params[0], params[1]))
+                                                        acc_param=(params['acc_p']),
+                                                        gyr_param=(params['gyr_p']))
                     elif addr == 0x36 or addr==0x48:
                         scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
-                        data[addr] = np.array(data[addr])*scale[0]
-                    
-        return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
+                        data[addr] = np.array(data[addr]*scale[0])
+                    columns.append(['t'])
+                    data['t'] =  np.arange(len(data)/self.fs)
+        return pd.DataFrame(data, index='t', columns=columns)
 
     def save_data(self, df: pd.DataFrame):
         path = self.root+'/data/'
@@ -199,11 +199,12 @@ class daq:
             os.mkdir(path)
             pass
         try:
-            df.to_csv(path+'data_%2i.csv' % num)
-            logging.info("Saved data to {}".format(path+'data_%2i.csv' % num))
+            filename = path+'data_{:03d}.csv'.format(num)
+            df.to_csv(filename)
+            logging.info("saved data to {}".format(filename))
             return True
         except Exception as e:
-            logging.error('Could not savedata_%2i.csv' % num, exc_info=e)
+            logging.error('Could not savedata_{:03d}.csv'.format(num), exc_info=e)
             return False
 
 
