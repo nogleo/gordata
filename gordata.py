@@ -2,7 +2,7 @@ import os
 import queue
 from struct import unpack
 import time
-from smbus import SMBus
+import smbus
 import numpy as np
 import pandas as pd
 import scipy
@@ -16,26 +16,28 @@ from scipy.fftpack import fft, ifft, fftfreq
 
 
 class daq:
-    def __init__(self) -> None:
+    def __init__(self):
         self.__name__ = "daq"
+        logging.basicConfig(level=logging.DEBUG)
         try:
-            self.bus = SMBus(1)
+            self.bus = smbus.SMBus(1)
             logging.info("I2C bus successfully initialized")
         except Exception as e:
-            logging.warning("I2C connection Error: ", e)
+            logging.warning("I2C connection Error: ", exc_info=e)
             logging.info("I2C bus unable to initialize")
 
         # list of variables
         self.root: str = os.getcwd()
         self.sessionname: str = None
         self.devices: dict = {}
-        self.fs = 1666  # sampling frequency
-        self.dt = 1/self.fs  # sampling period
-        self.running = False
-        self.raw = False
-        self.data_rate = 8  # 8=1666Hz 9=3330Hz 10=6660Hz
-        self.data_range = [1, 3]  # [16G, 2000DPS]
-        self.queue = queue.Queue()
+        self.settings: dict = {}
+        self.fs: float = 1666  # sampling frequency
+        self.dt: float = 1/self.fs  # sampling period
+        self.running: bool = False
+        self.raw: bool = False
+        self.data_rate: int = 8  # 8=1666Hz 9=3330Hz 10=6660Hz
+        self.data_range: list[int] = [1, 3]  # [16G, 2000DPS]
+        self.q = queue.Queue()
         self.init_devices()
 
     def init_devices(self):
@@ -45,19 +47,21 @@ class daq:
                 logging.info("Found device at address: 0x%02X", address)
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
-                    self.devices[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
-                    settings = [[0x10,(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)],
-                                [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
-                                [0x12, 0x44],
-                                [0x13, 1 << 1],
-                                [0x15, 0b011],
-                                [0X17, 0x44]]  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
+                    self.devices[address] = [0x22, 12, '<hhhhhh', 
+                                             ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num],
+                                              None]
+                    self.settings[address] = {0x10:(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1),
+                                     0x11: (self.data_rate << 4 | self.data_range[1] << 2),
+                                     0x12: 0x44,
+                                     0x13: 1 << 1,
+                                     0x15: 0b011,
+                                     0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
                     self.set_device(address, settings)
                         
                 elif address == 0x48:
                     self.devices[address] = [0x00, 2, '>h', ['cur'], None]
                     config = (3 << 9 | 0 << 8 | 4 << 5 | 3)
-                    settings = [0x01, [(config >> 8 & 0xFF), (config & 0xFF)]]
+                    settings = {0x01: [(config >> 8 & 0xFF), (config & 0xFF)]}
                     self.set_device(address, settings)
                 elif address == 0x36:
                     self.devices[address] = [0x0C, 2, '>H', ['rot'], None]
@@ -67,8 +71,8 @@ class daq:
                 pass
     
 
-    def set_device(self, address: int, settings) -> bool: 
-        for reg, value in settings:
+    def set_device(self, address: int, settings: dict) -> bool: 
+        for reg, value in settings.items():
             try:
                 self.bus.write_byte_data(address, reg, value)
                 logging.info("Set device address: : 0x%02X", address)
@@ -116,7 +120,7 @@ class daq:
             else:
                 return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
 
-    def translate_imu(self, acc = None, gyr=None, fs=None, acc_param=None, gyr_param=None):
+    def translate_imu(self, acc: np.array=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
 
@@ -125,19 +129,20 @@ class daq:
     def pull_data(self, durr: float=None, devices=None, raw=True):
         if devices is None:
             devices = self.devices
-        q = queue.Queue()
-        self.running = True
+        if self.q.not_empty():
+            self.q.queue.clear()
+        
         t0 = ti = tf = time.perf_counter()
         while self.running and tf-t0<= durr:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
-                for addr, val in devices:
+                for addr, val in devices.items():
                     try:
-                        q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
+                        self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
                         
                     except Exception as e:
-                        q.put((0,)*val[1])
+                        self.q.put((0,)*val[1])
                         #q.put((np.NaN,)*val[1])
                         logging.warning("Could not pull data. Error: ", exc_info=e)
                 
@@ -145,19 +150,26 @@ class daq:
         logging.debug("Pulled data in %.6f s" % (t1-t0))
         if raw is False:
             return 
-        return self.dequeue_data(q)
+        return self.dequeue_data()
 
-    def dequeue_data(self, q: queue.Queue()=None) -> pd.DataFrame():
+    def dequeue_data(self) -> pd.DataFrame():
         data = {}
-        if q is not None:
+        if self.q is not None:
             for addr, val in self.devices.items():
                 columns = []
                 columns.append(val[-2])
                 data[addr] = []
-            while q.size() > 0:
-                for addr, val in self.devices:
-                    data[addr].append(unpack(val[2], bytearray(q.get())))
-            for addr, val in self.devices.items():
+                logging.debug("Dequeuing data to {}".format(val[-2]))
+            while self.q.qsize() > 0:       #block dequeueing data
+                for addr, val in self.devices.items():
+                    qq = self.q.get()
+                    if any(qq):
+                        logging.debug("Dequeuing data to {} and {}".format(addr, val))
+                        data[addr].append(unpack(val[2], bytearray(self.q.get())))
+                    else:
+                        data[addr].append(data[addr][-1])
+                        #data[addr].append((np.NaN,)*val[1])
+            for addr, val in self.devices.items():  #block translate from raw to meaningful data
                 if val[-1] is not None:
                     if addr == 0x6a or addr == 0x6b:
                         params = pd.read_csv('./sensors/'+val[-1]+'.csv')

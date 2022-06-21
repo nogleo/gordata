@@ -32,18 +32,19 @@ class Worker(qtc.QRunnable):
         try:
             result = self.fn()
         except Exception as e:
-            print(e)
+            logging.debug("couldn`t run", exc_info=e)
 
 class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        logging.basicConfig(level=logging.DEBUG)
         global dsp
         dsp = gd.dsp()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.msg = ""
         self.ui.startbutton.clicked.connect(self.collect)
-        self.ui.stopbutton.clicked.connect(self.interrupt)
+        self.ui.stopbutton.clicked.connect(self.stop_collect)
         self.ui.openbttn.clicked.connect(self.getFile)
         self.ui.calibutton.clicked.connect(self.calibration)
         self.ui.linkSensor.clicked.connect(self.linkSens)
@@ -55,7 +56,7 @@ class app_gd(qtw.QMainWindow):
         
         self.datacache = []
         self.threadpool = qtc.QThreadPool()
-        print("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
+        logging.debug("Multithreading with maximum %d threads" % self.threadpool.maxThreadCount())
         
         self.toolbar = None
         self.canv = MatplotlibCanvas(self)
@@ -64,20 +65,19 @@ class app_gd(qtw.QMainWindow):
         self.canvTF = MatplotlibCanvas(self)
         #self.ui.vLayout_TF.addWidget(self.canvTF)
     def initDevices(self):
-        global daq, fs, dt
         #dn = nog.daq()
-        daq = gd.daq()
-        fs = 1666
-        dt = 1/fs
+        global dq
+        dq = gd.daq()
+        
         
         self.devices={}
         '''
         try:
             with open(root+'sensors.data', 'rb') as f:
                 dn.dev = pickle.load(f)
-            print(root+'sensors.data loaded')
+            logging.debug(root+'sensors.data loaded')
         except:
-            print('no previous sensor data')
+            logging.debug('no previous sensor data')
         for _dev in dn.dev:
             self.devsens[str(_dev[0])] = str(_dev[-1])
         '''
@@ -86,10 +86,11 @@ class app_gd(qtw.QMainWindow):
         self.ui.calibutton.setEnabled(True)
 
     def pull(self):
-        for addr in daq.devices:
-            daq.set_device(addr, daq.devices[addr])
-            time.sleep(daq.dt)
-        daq.save_data(daq.pull_data(durr=float(self.ui.label.text()), devices=daq.devices))
+        for addr in dq.devices:
+            dq.set_device(addr, dq.devices[addr])
+            time.sleep(dq.dt)
+        dq.running = True
+        dq.save_data(dq.pull_data(durr=float(self.ui.label.text()), devices=dq.devices))
         
         self.ui.startbutton.setEnabled(True)
 
@@ -105,14 +106,19 @@ class app_gd(qtw.QMainWindow):
             self.ui.comboBox.clear()
         except :
             pass
-        for address, device in daq.devices.items():
+        for address, device in dq.devices.items():
             self.devices[str(address)] = device
             self.ui.comboBox.addItem(str(address)+'--'+str(device[-1]))
             logging.debug(f"Device {address} loaded")
-        print(self.devices)
+        logging.debug(self.devices)
 
     def interrupt(self):
-        daq.running = 0
+        dq.running = False
+    
+    def stop_collect(self):
+        self.ui.startbutton.setEnabled(False)
+        worker = Worker(self.interrupt())
+        self.threadpool.start(worker)
     
     def getFile(self):
         """ This function will get the address of the csv file location
@@ -125,7 +131,7 @@ class app_gd(qtw.QMainWindow):
             pass
 
         self.filename = qtw.QFileDialog.getOpenFileName()[0]
-        print("File :", self.filename)
+        logging.debug("File :", self.filename)
         try:
             self.readData()
         except Exception:
@@ -140,17 +146,18 @@ class app_gd(qtw.QMainWindow):
 
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/sensors')[0]
         logging.info("File :", self.filename)
-        key = list(daq.devices.keys())[self.ui.comboBox.currentIndex()]
-        daq.devices[key][-1] = self.filename[25:]
+        key = list(dq.devices.keys())[self.ui.comboBox.currentIndex()]
+        dq.devices[key][-1] = self.filename[25:]
         self.loadDevices()
         with open(root+'sensors.data', 'wb') as f:
-            pickle.dump(daq.devices, f)
+            pickle.dump(dq.devices, f)
         os.chdir(root)
         np.save('devsens.npy', self.devsens)
 
 
     def readData(self):
         self.datacache = pd.read_csv(self.filename, index_col='t')
+
         self.updatePlot(self.datacache)
         
     def loadTF(self):
@@ -162,7 +169,7 @@ class app_gd(qtw.QMainWindow):
             pass
 
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/DATA')[0]
-        print("File :", self.filename)
+        logging.debug("File :", self.filename)
         self.datacache = pd.read_csv(self.filename, index_col='t')
         try:
             self.ui.combo_TF.clear()
@@ -180,12 +187,13 @@ class app_gd(qtw.QMainWindow):
         frame = str(self.ui.combo_TF.currentText())
         data = self.datacache[[frame]]
         try:
-            self.ui.vLayout_TF.removeWidget(self.canvTF)
             self.ui.hLayout_TF.removeWidget(self.toolbarTF)
+            self.ui.vLayout_TF.removeWidget(self.canvTF)
+            self.canvTF.close()
             self.toolbarTF = None
             self.canvTF = None
         except Exception as e:
-            print('warning =>> '+str(e))
+            logging.debug(f"can`t remove widget(s)", exc_info=e)
             pass
         self.canvTF = MatplotlibCanvas(self)
         self.toolbarTF = Navi(self.canvTF,self.ui.tab_TF)
@@ -213,7 +221,7 @@ class app_gd(qtw.QMainWindow):
             self.toolbar = None
             self.canv = None
         except Exception as e:
-            print('warning =>> '+e)
+            logging.debug('warning =>> ', exc_info=e)
             pass
         self.canv = MatplotlibCanvas(self)
         self.toolbar = Navi(self.canv,self.ui.tab_plot)
@@ -221,14 +229,11 @@ class app_gd(qtw.QMainWindow):
         self.ui.vLayout_plot.addWidget(self.canv)
         self.canv.axes.cla()
             
-        try:        
-                       
+        try:                               
             self.canv.axes.plot(plotdata)
-            self.canv.axes.legend(plotdata.columns)            
-            
-
+            self.canv.axes.legend(plotdata.columns)     
         except Exception as e:
-            print('==>',e)
+            logging.debug('Can`t plot data ==>',exc_info=e)
         self.canv.draw()
 
     def showmessage(self, msg):
@@ -247,7 +252,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = daq.devices[list(daq.devices.keys())[self.ui.comboBox.currentIndex()]]
+        device = dq.devices[list(dq.devices.keys())[self.ui.comboBox.currentIndex()]]
         
         
 
@@ -259,27 +264,27 @@ class app_gd(qtw.QMainWindow):
             sensor ={'name': msg} 
             _path = 'rawdata_{}.csv'.format(sensor['name'])
         else:
-                print('cancelled')
+                logging.debug('cancelled')
                 return
         
         NS, ok = qtw.QInputDialog().getInt(self,    'Sample Length',
                                                     'Number seconds per Position: ',
                                                     5, 1, 10, 1)
         if ok:
-            self.NS = NS*daq.fs
-            print(self.NS)
+            self.NS = NS*dq.fs
+            logging.debug(self.NS)
         else:
-                print('cancelled')
+                logging.debug('cancelled')
                 return
 
         ND, ok = qtw.QInputDialog().getInt(self,  'Sample Length', 
                                                     'Number seconds per Rotation: ',
                                                     5, 1, 10,1)
         if ok:
-            self.ND = ND*daq.fs
-            print(self.ND)
+            self.ND = ND*dq.fs
+            logging.debug(self.ND)
         else:
-                print('cancelled')
+                logging.debug('cancelled')
                 return
 
         self.calibrationdata = np.zeros((6*self.NS+3*self.ND, 6))
@@ -288,49 +293,49 @@ class app_gd(qtw.QMainWindow):
         while ii < 6:
             ok = self.showmessage('Move your IMU to the '+str(ii+1)+' position')
             if ok:
-                print('collecting position  '+ str(ii+1))   
+                logging.debug('collecting position  '+ str(ii+1))   
                     
                 ti = tf = time.perf_counter()
                 
                 while i<(ii+1)*self.NS:
                     tf=time.perf_counter()
-                    if tf-ti>=daq.dt:
+                    if tf-ti>=dq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(daq.pull_data(durr=daq.dt, devices=device))
+                            self.calibrationdata[i,:] = np.array(dq.pull_data(durr=dq.dt, devices=device))
                             i+=1
                         except Exception as e:
-                            print(e)
+                            logging.debug(e)
                             self.calibrationdata[i,:] = 6*(0,)
                             
             else:
-                print('cancelled')
+                logging.debug('cancelled')
                 return  
             ii+=1
             
             
-        print(i)
+        logging.debug(i)
                 
         ii=0    
         while ii <3:
             ok = self.showmessage('Rotate Cube Around Axis '+str(ii+1))
             if ok:        
                    
-                print('collecting rotation  '+ str(ii+1))   
+                logging.debug('collecting rotation  '+ str(ii+1))   
                 ti = tf = time.perf_counter()
                 while i<(6*self.NS+((ii+1)*self.ND)):
                     tf=time.perf_counter()
-                    if tf-ti>=daq.dt:
+                    if tf-ti>=dq.dt:
                         ti = tf
                         try:
-                            self.calibrationdata[i,:] = np.array(daq.pull_data(durr=daq.dt, devices=device))
+                            self.calibrationdata[i,:] = np.array(dq.pull_data(durr=dq.dt, devices=device))
                             i+=1
                         except Exception as e:
-                            print(e)
+                            logging.debug(e)
                             self.calibrationdata[i,:] = 6*(0,)
                             
             else:
-                print('cancelled')
+                logging.debug('cancelled')
                 return  
             ii+=1
         
@@ -340,15 +345,15 @@ class app_gd(qtw.QMainWindow):
         df = pd.DataFrame(self.calibrationdata)
         df.to_csv(_path, index=False)
         #self.updatePlot(self.calibrationdata)
-        sensor['acc_p'], sensor['gyr_p'] = daq.calibrate_imu(acc=self.calibrationdata[0:6*self.NS,3:6],
+        sensor['acc_p'], sensor['gyr_p'] = dq.calibrate_imu(acc=self.calibrationdata[0:6*self.NS,3:6],
                                                             gyr=self.calibrationdata[:,0:3],
-                                                            Ts=self.NS*daq.fs,
-                                                            Td=self.ND*daq.fs,
-                                                            fs=daq.fs)
+                                                            Ts=self.NS*dq.fs,
+                                                            Td=self.ND*dq.fs,
+                                                            fs=dq.fs)
                                                             
         #sensor['acc_p'],  = daq.calibacc(self.calibrationdata[0:6*self.NS,3:6], self.NS)
         #sensor['gyr_p'] = daq.calibgyr(self.calibrationdata[:,0:3], self.NS, self.ND) 
-        sensorframe = pd.DataFrame(sensor, columns=[ 'acc_p', 'gyr_p'])
+        sensorframe = pd.DataFrame(sensor, columns=['acc_p', 'gyr_p'])
         sensorframe.to_csv('{}.csv'.format(sensor['name']))     
         np.savez(sensor['name'], sensor['gyr_p'], sensor['acc_p'])
         gc.collect()
