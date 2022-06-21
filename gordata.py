@@ -163,14 +163,15 @@ class daq:
                 columns = []
                 columns.append(val[-2])
                 data[addr] = []
-                logging.debug("Dequeuing data to {}".format(val[-2]))
+                logging.debug("Dequeuing data from {}".format(addr))
             while self.q.qsize() > 0:       #block dequeueing data
                 for addr, val in self.devices.items():
                     qq = self.q.get()
                     if any(qq):
-                        logging.debug("Dequeuing data to {} and {}".format(addr, val))
-                        data[addr].append(unpack(val[2], bytearray(self.q.get())))
+                        #logging.debug("Dequeuing data to {} and {}".format(addr, val))
+                        data[addr].append(unpack(val[2], bytearray(qq)))
                     else:
+                        logging.info('dequeue data error, repeat last value')
                         data[addr].append(data[addr][-1])
                         #data[addr].append((np.NaN,)*val[1])
             for addr, val in self.devices.items():  #block translate from raw to meaningful data
@@ -199,9 +200,10 @@ class daq:
             pass
         try:
             df.to_csv(path+'data_%2i.csv' % num)
+            logging.info("Saved data to {}".format(path+'data_%2i.csv' % num))
             return True
-        except:
-            logging.warning('Could not savedata_%2i.csv' % num)
+        except Exception as e:
+            logging.error('Could not savedata_%2i.csv' % num, exc_info=e)
             return False
 
 
