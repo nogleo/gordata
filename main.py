@@ -116,7 +116,7 @@ class app_gd(qtw.QMainWindow):
         dq.running = False
     
     def stop_collect(self):
-        self.ui.startbutton.setEnabled(False)
+        self.ui.startbutton.setEnabled(True)
         worker = Worker(self.interrupt)
         self.threadpool.start(worker)
     
