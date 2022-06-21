@@ -136,6 +136,7 @@ class daq:
         if self.q.not_empty:
             self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
+        self.running = True
         while self.running and tf-t0<= durr:
             tf = time.perf_counter()
             if tf-ti>=self.dt:

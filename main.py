@@ -91,7 +91,7 @@ class app_gd(qtw.QMainWindow):
             time.sleep(dq.dt)
         
         dq.save_data(dq.pull_data(durr=float(self.ui.label.text())))
-        dq.running = True
+        
         self.ui.startbutton.setEnabled(True)
 
     def collect(self):
@@ -116,7 +116,7 @@ class app_gd(qtw.QMainWindow):
         dq.running = False
     
     def stop_collect(self):
-        self.ui.startbutton.setEnabled(True)
+        
         worker = Worker(self.interrupt)
         self.threadpool.start(worker)
     
