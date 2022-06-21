@@ -1,3 +1,4 @@
+from cmath import inf
 import os
 import queue
 from struct import unpack
@@ -128,11 +129,12 @@ class daq:
         return acc_t.T, gyr_t.T
 
     def pull_data(self, durr: float=None, devices=None, raw=True):
+        if durr is 0.0:
+            durr = float('inf')
         if devices is None:
             devices = self.devices
         if self.q.not_empty:
-            self.q.queue.clear()
-        
+            self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
         while self.running and tf-t0<= durr:
             tf = time.perf_counter()
