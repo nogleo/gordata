@@ -45,8 +45,8 @@ class daq:
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
                     self.devices[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
-                    settings = [[0x10,[(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)]],
-                                [0x11, [(self.data_rate << 4 | self.data_range[1] << 2)]],
+                    settings = [[0x10,(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)],
+                                [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
                                 [0x12, 0x44],
                                 [0x13, 1 << 1],
                                 [0x15, 0b011],
@@ -125,7 +125,7 @@ class daq:
 
     def pull_data(self, durr: float=None, devices=None, raw=True):
         if devices is None:
-            self.devices
+            devices = self.devices
         q = queue.Queue()
         self.running = True
         t0 = ti = tf = time.perf_counter()
@@ -151,14 +151,14 @@ class daq:
     def dequeue_data(self, q: queue=None) -> pd.DataFrame:
         data = {}
         if q is not None:
-            for addr, val in self.devices:
+            for addr, val in self.devices.items():
                 columns = []
                 columns.append(val[-2])
                 data[addr] = []
             while q.size() > 0:
                 for addr, val in self.devices:
                     data[addr].append(unpack(val[2], bytearray(q.get())))
-            for addr, val in self.devices:
+            for addr, val in self.devices.items():
                 if val[-1] is not None:
                     if addr == 0x6a or addr == 0x6b:
                         params = pd.read_csv('./sensors/'+val[-1]+'.csv')
