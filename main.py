@@ -126,12 +126,12 @@ class app_gd(qtw.QMainWindow):
         """
         os.chdir(root)
         try:
-            os.chdir('DATA')
+            os.chdir('data')
         except :
             pass
 
         self.filename = qtw.QFileDialog.getOpenFileName()[0]
-        logging.debug("File :", self.filename)
+        logging.debug("File : {}".format(self.filename))
         try:
             self.readData()
         except Exception:
