@@ -139,9 +139,9 @@ class app_gd(qtw.QMainWindow):
             pass
 
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/sensors')[0]
-        print("File :", self.filename)
-        ii = self.ui.comboBox.currentIndex()
-        daq.devices[ii][-1] = self.filename[25:]
+        logging.info("File :", self.filename)
+        key = list(daq.devices.keys())[self.ui.comboBox.currentIndex()]
+        daq.devices[key][-1] = self.filename[25:]
         self.loadDevices()
         with open(root+'sensors.data', 'wb') as f:
             pickle.dump(daq.devices, f)
@@ -200,8 +200,8 @@ class app_gd(qtw.QMainWindow):
             #self.canvTF.axes.pcolormesh(t, f, S_db, shading='gouraud',  cmap='turbo')
             self.canvTF.axes.imshow(np.flip(S_db,axis=0), aspect='auto', cmap='turbo', interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
         except Exception as e:
-            print('warning =>> '+str(e))
-            pass
+           logging.warning('warning =>> '+str(e))
+           pass
         self.canvTF.draw()
         self.canvTF.fig.tight_layout()
        
@@ -247,7 +247,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = daq.devices[daq.devices[self.ui.comboBox.currentIndex()]]
+        device = daq.devices[list(daq.devices.keys())[self.ui.comboBox.currentIndex()]]
         
         
 

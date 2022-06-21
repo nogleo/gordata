@@ -42,6 +42,7 @@ class daq:
         for address in range(128):
             try:
                 self.bus.read_byte(address)
+                logging.info("Found device at address: 0x%02X", address)
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
                     self.devices[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
@@ -62,7 +63,7 @@ class daq:
                     self.devices[address] = [0x0C, 2, '>H', ['rot'], None]
 
             except:
-                logging.warning(f"can`t connect address: {address}")
+                logging.debug("can`t connect address: : 0x%02X", address)
                 pass
     
 
@@ -70,9 +71,9 @@ class daq:
         for set in settings:
             try:
                 self.bus.write_byte_data(address, set[0], set[1])
-                logging.debug(f"Set device {address}...")
+                logging.info("Set device address: : 0x%02X", address)
             except Exception as e:
-                logging.warning(f"Could not set device {address}...", e)
+                logging.warning("Could not set device address: : 0x%02X", address, exc_info=e)
                 return False
         return True
 
@@ -92,8 +93,7 @@ class daq:
             acc_KS = acc_grv@np.linalg.pinv(acc_ub)
 
         if gyr is not None:
-            gyr_mean = np.array(
-                [np.mean(gyr[Ns*n:Ns*(n+1)-1], axis=0) for n in range(6)]).T
+            gyr_mean = np.array([np.mean(gyr[Ns*n:Ns*(n+1)-1], axis=0) for n in range(6)]).T
             # gyr_std = np.std(gyr[:6*Ns, :]).reshape((3, 1))
             gyr_bias = np.mean(gyr[:6*Ns, :], axis=0).reshape((3, 1))
             gyr_rot = np.zeros_like(gyr_mean)
@@ -102,8 +102,7 @@ class daq:
 
             gyr_d = gyr[6*Ns:, :]-gyr_bias.T
             # gyr_rot = np.array([np.sum(gyr_d[Nd*n:Nd*(n+1)-1], axis=0) for n in range(3)]).T*dt
-            gyr_rot = np.array(
-                [np.mean(gyr_d[Nd*n:Nd*(n+1)-1], axis=0) for n in range(3)]).T
+            gyr_rot = np.array([np.mean(gyr_d[Nd*n:Nd*(n+1)-1], axis=0) for n in range(3)]).T
             # gyr_ref = (gyr_rot>1000)*np.pi + (gyr_rot<-1000)*-np.pi
             gyr_ref = ((gyr_rot > 100)*np.pi + (gyr_rot < -100)*-np.pi)/(Nd/fs)
             gyr_KS = gyr_ref@np.linalg.inv(gyr_rot)
