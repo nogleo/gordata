@@ -70,7 +70,7 @@ class app_gd(qtw.QMainWindow):
         fs = 1666
         dt = 1/fs
         
-        self.devsens={}
+        self.devices={}
         '''
         try:
             with open(root+'sensors.data', 'rb') as f:
@@ -86,10 +86,10 @@ class app_gd(qtw.QMainWindow):
         self.ui.calibutton.setEnabled(True)
 
     def pull(self):
-        for addr in daq.devices_list:
-            daq.set_device(addr, daq.devices_config[addr])
+        for addr in daq.devices:
+            daq.set_device(addr, daq.devices[addr])
             time.sleep(daq.dt)
-        daq.save_data(daq.pull_data(durr=float(self.ui.label.text()), devices=daq.devices_config))
+        daq.save_data(daq.pull_data(durr=float(self.ui.label.text()), devices=daq.devices))
         
         self.ui.startbutton.setEnabled(True)
 
@@ -105,10 +105,11 @@ class app_gd(qtw.QMainWindow):
             self.ui.comboBox.clear()
         except :
             pass
-        for address in daq.devices_list:
-            self.devsens[str(address)] = str(daq.devices_config[address][-1])
-            self.ui.comboBox.addItem(str(address)+'--'+str(daq.devices_config[address][-1]))
-        print(self.devsens)
+        for address, device in daq.devices:
+            self.devices[str(address)] = device
+            self.ui.comboBox.addItem(str(address)+'--'+str(device[-1]))
+            logging.debug(f"Device {address} loaded")
+        print(self.devices)
 
     def interrupt(self):
         daq.running = 0
@@ -140,10 +141,10 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/sensors')[0]
         print("File :", self.filename)
         ii = self.ui.comboBox.currentIndex()
-        daq.dev[ii][-1] = self.filename[25:]
+        daq.devices[ii][-1] = self.filename[25:]
         self.loadDevices()
         with open(root+'sensors.data', 'wb') as f:
-            pickle.dump(daq.dev, f)
+            pickle.dump(daq.devices, f)
         os.chdir(root)
         np.save('devsens.npy', self.devsens)
 
@@ -246,7 +247,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = daq.devices_config[daq.devices_list[self.ui.comboBox.currentIndex()]]
+        device = daq.devices[daq.devices[self.ui.comboBox.currentIndex()]]
         
         
 

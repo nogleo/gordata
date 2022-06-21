@@ -29,57 +29,51 @@ class daq:
         self.root: str = os.getcwd()
         self.sessionname: str = None
         self.devices: dict = {}
-        self.devices_list: list = []
-        self.devices_config: dict = {}
         self.fs = 1666  # sampling frequency
         self.dt = 1/self.fs  # sampling period
         self.running = False
         self.raw = False
-        self.data_rate = 9  # 8=1666Hz 9=3330Hz 10=6660Hz
+        self.data_rate = 8  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range = [1, 3]  # [16G, 2000DPS]
         self.queue = queue.Queue()
+        self.init_devices()
 
+    def init_devices(self):
         for address in range(128):
             try:
                 self.bus.read_byte(address)
-                self.devices_list.append(address)
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
-                    self.devices_config[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
+                    self.devices[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
                     settings = [[0x10, (self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)],
-                                 [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
-                                 [0x12, 0x44],
-                                 [0x13, 1 << 1],
-                                 [0x15, 0b011],
-                                 [0X17, (0b000 << 5)]]  # [0x44 is hardcoded acording to LSM6DSO datasheet]
+                                [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
+                                [0x12, 0x44],
+                                [0x13, 1 << 1],
+                                [0x15, 0b011],
+                                [0X17, 0x44]]  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
                     self.set_device(address, settings)
                         
                 elif address == 0x48:
-                    self.devices_config[address] = [
-                        0x00, 2, '>h', ['cur'], None]
-                    _config = (3 << 9 | 0 << 8 | 4 << 5 | 3)
-                    _settings = [0x01, [_config >> 8 & 0xFF, _config & 0xFF]]
-                    try:
-                        self.bus.write_i2c_block_data(
-                            address, _settings[0], _settings[1])
-                    except Exception as e:
-                        logging.warning("ERROR: ", e)
+                    self.devices[address] = [0x00, 2, '>h', ['cur'], None]
+                    config = (3 << 9 | 0 << 8 | 4 << 5 | 3)
+                    settings = [0x01, [(config >> 8 & 0xFF), (config & 0xFF)]]
+                    self.set_device(address, settings)
                 elif address == 0x36:
-                    self.devices_config[address] = [
-                        0x0C, 2, '>H', ['rot'], None]
+                    self.devices[address] = [0x0C, 2, '>H', ['rot'], None]
 
             except:
                 logging.warning(f"can`t connect address: {address}")
                 pass
-    def set_device(self, address: int, settings: list): 
+    
+
+    def set_device(self, address: int, settings: list) -> bool: 
         for set in settings:
             try:
-                self.bus.write_i2c_block_data(address, set[0], set[1])
-                logging.warning(f"Set device {address}.")
-            except:
-                logging.warning(f"Could not set device {address}.")
+                self.bus.write_byte_data(address, set[0], set[1])
+                logging.debug(f"Set device {address}...")
+            except Exception as e:
+                logging.warning(f"Could not set device {address}...", exc_info=e)
                 return False
-        
         return True
 
 
@@ -91,10 +85,8 @@ class daq:
         if acc is not None:
             acc_mean = np.array(
                 [np.mean(acc[Ns*n:Ns*(n+1)-1], axis=0) for n in range(6)]).T
-            acc_std = np.array(
-                [np.std(acc[Ns*n:Ns*(n+1)-1], axis=0) for n in range(6)])
-            acc_bias = np.array(
-                [(acc_mean[n, :].max()+acc_mean[n, :].min())/2 for n in range(3)], ndmin=2).T
+            #acc_std = np.array([np.std(acc[Ns*n:Ns*(n+1)-1], axis=0) for n in range(6)])
+            acc_bias = np.array([(acc_mean[n, :].max()+acc_mean[n, :].min())/2 for n in range(3)], ndmin=2).T
             acc_ub = acc_mean-acc_bias
             acc_grv = (acc_ub > 1000)*9.81 + (acc_ub < -1000)*-9.81
             acc_KS = acc_grv@np.linalg.pinv(acc_ub)
@@ -133,7 +125,7 @@ class daq:
 
     def pull_data(self, durr: float=None, devices=None, raw=True):
         if devices is None:
-            self.devices_config
+            self.devices
         q = queue.Queue()
         self.running = True
         t0 = ti = tf = time.perf_counter()
@@ -147,6 +139,7 @@ class daq:
                         
                     except Exception as e:
                         q.put((0,)*val[1])
+                        #q.put((np.NaN,)*val[1])
                         logging.warning("Could not pull data. Error: ", exc_info=e)
                 
         t1 = time.perf_counter()
@@ -158,13 +151,26 @@ class daq:
     def dequeue_data(self, q: queue=None) -> pd.DataFrame:
         data = {}
         if q is not None:
-            for addr, val in self.devices_config:
+            for addr, val in self.devices:
                 columns = []
                 columns.append(val[-2])
                 data[addr] = []
             while q.size() > 0:
-                for addr, val in self.devices_config:
+                for addr, val in self.devices:
                     data[addr].append(unpack(val[2], bytearray(q.get())))
+            for addr, val in self.devices:
+                if val[-1] is not None:
+                    if addr == 0x6a or addr == 0x6b:
+                        params = pd.read_csv('./sensors/'+val[-1]+'.csv')
+                        array = np.array(data[addr])
+                        data[addr] = self.translate_imu(acc=array[:,3:],
+                                                        gyr=data[addr][:][0:3],
+                                                        fs=self.fs,
+                                                        gyr_param=(params[2], params[3]),
+                                                        acc_param=(params[0], params[1]))
+                    elif addr == 0x36 or addr==0x48:
+                        scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
+                        data[addr] = np.array(data[addr])*scale[0]
                     
         return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
 
