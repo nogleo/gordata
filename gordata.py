@@ -187,20 +187,19 @@ class daq:
         return pd.DataFrame(data, index=np.arange(len(data)/self.fs), columns=columns)
 
     def save_data(self, df: pd.DataFrame):
-        if self.sessionname is not None:
-            path = self.root+'/data/'+self.sessionname+'/'
-        else:
-            path = self.root+'/data/'
-        num: int = os.listdir(path).__len__()
+        path = self.root+'/data/'
+        try:
+            num: int = os.listdir(path).__len__()
+        except Exception as e:
+            logging.debug("can`t list path", exc_info=e)
+            os.mkdir(path)
         try:
             df.to_csv(path+'data_%2i.csv' % num)
             return True
         except:
-            logging.warning("Could not save data")
+            logging.warning("Could not save"+path+'data_%2i.csv' % num)
             return False
 
-
-        
 
 class dsp:
     def __init__(self, *args, **kwargs) -> None:
