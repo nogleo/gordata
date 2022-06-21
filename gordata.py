@@ -129,7 +129,7 @@ class daq:
         return acc_t.T, gyr_t.T
 
     def pull_data(self, durr: float=None, devices=None, raw=True):
-        if durr is 0.0:
+        if durr == 0.0:
             durr = float('inf')
         if devices is None:
             devices = self.devices
