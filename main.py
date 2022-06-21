@@ -117,7 +117,7 @@ class app_gd(qtw.QMainWindow):
     
     def stop_collect(self):
         self.ui.startbutton.setEnabled(False)
-        worker = Worker(self.interrupt())
+        worker = Worker(self.interrupt)
         self.threadpool.start(worker)
     
     def getFile(self):

@@ -130,7 +130,7 @@ class daq:
     def pull_data(self, durr: float=None, devices=None, raw=True):
         if devices is None:
             devices = self.devices
-        if self.q.not_empty():
+        if self.q.not_empty:
             self.q.queue.clear()
         
         t0 = ti = tf = time.perf_counter()
