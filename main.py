@@ -105,7 +105,7 @@ class app_gd(qtw.QMainWindow):
             self.ui.comboBox.clear()
         except :
             pass
-        for address, device in daq.devices:
+        for address, device in daq.devices.items():
             self.devices[str(address)] = device
             self.ui.comboBox.addItem(str(address)+'--'+str(device[-1]))
             logging.debug(f"Device {address} loaded")
