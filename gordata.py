@@ -45,8 +45,8 @@ class daq:
                 if address == 0x6a or address == 0x6b:
                     num = str(107-address)
                     self.devices[address] = [0x22, 12, '<hhhhhh', ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num], None]
-                    settings = [[0x10, (self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)],
-                                [0x11, (self.data_rate << 4 | self.data_range[1] << 2)],
+                    settings = [[0x10,[(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1)]],
+                                [0x11, [(self.data_rate << 4 | self.data_range[1] << 2)]],
                                 [0x12, 0x44],
                                 [0x13, 1 << 1],
                                 [0x15, 0b011],
@@ -72,7 +72,7 @@ class daq:
                 self.bus.write_byte_data(address, set[0], set[1])
                 logging.debug(f"Set device {address}...")
             except Exception as e:
-                logging.warning(f"Could not set device {address}...", exc_info=e)
+                logging.warning(f"Could not set device {address}...", e)
                 return False
         return True
 
