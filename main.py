@@ -41,6 +41,7 @@ class Worker(qtc.QRunnable):
 class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self._main = qtw.QWidget()
         logging.basicConfig(level=logging.DEBUG)
         global dsp
         dsp = gd.dsp()
@@ -63,12 +64,14 @@ class app_gd(qtw.QMainWindow):
         logging.debug("Multithreading with maximum %d threads" %
                       self.threadpool.maxThreadCount())
 
-        self.canv = MatplotlibCanvas(self)
-        self.toolbar = Navi(self.canv,self.ui.hLayout_plot)
-        # self.ui.vLayout_plot.addWidget(self.canv)
-        self.canvTF = MatplotlibCanvas(self)
-        self.toolbarTF = Navi(self,self.ui.tab_plot)
-        # self.ui.vLayout_TF.addWidget(self.canvTF)
+        self.canv = MatplotlibCanvas()
+        self.ui.vLayout_plot.addWidget(self.canv)
+        self.ui.hLayout_plot.addWidget(Navi(self, parent))
+        self.toolbar = Navi(self.canv, self.ui.tab_plot)
+        #self.ui.vLayout_plot.addWidget(self.canv)
+        self.canvTF = MatplotlibCanvas()
+        self.toolbarTF = qtw.QTabBar()
+        ## self.ui.vLayout_TF.addWidget(self.canvTF)
 
     def initDevices(self):
         #dn = nog.daq()
@@ -191,7 +194,6 @@ class app_gd(qtw.QMainWindow):
         frame = str(self.ui.combo_TF.currentText())
         data = self.datacache[[frame]]
         try:
-            self.canvTF.close()
             self.ui.hLayout_TF.removeWidget(self.toolbarTF)
             self.ui.vLayout_TF.removeWidget(self.canvTF)
         except Exception as e:
