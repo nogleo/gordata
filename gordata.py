@@ -162,7 +162,8 @@ class daq:
 
     def dequeue_data(self, raw: bool=True) -> pd.DataFrame():
         data = {}
-        columns = ['t']   
+        columns = ['t'] 
+        
         for addr, val in self.devices.items():
             data[addr] = []
             columns.append(val['lbl'])
@@ -179,10 +180,9 @@ class daq:
                     pass
                 
         logging.info('Dequeue successfull')
-        data_array = self.dt*(np.arange(len(data[addr]))).reshape((len(data[addr]),1))
-        for addr, val in self.devices.items():
-              #block translate from raw to meaningful data
-            array = np.array(data[addr])
+        data_array = np.array(self.dt*(np.arange(len(data[addr]))), ndmin=2).T
+        for addr, val in self.devices.items():      #block translate from raw to meaningful data
+            array = np.array(data[addr], ndmin=2)
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
                     params = pd.read_csv('./sensors/'+val['cal']+'.csv')
