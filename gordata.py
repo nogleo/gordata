@@ -149,6 +149,7 @@ class daq:
         while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
+                ti = time.perf_counter()
                 ii+=1    
                 for val in value:
                     try:
@@ -156,7 +157,6 @@ class daq:
                     except:
                         self.q.put(0)
                         pass
-                ti = time.perf_counter()
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
         return self.dequeue_data()
