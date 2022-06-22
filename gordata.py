@@ -47,7 +47,7 @@ class daq:
                     num = str(107-address)
                     self.devices[address] = [0x22, 12, '<hhhhhh', 
                                              ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num],
-                                              None]}
+                                              None]
                     self.settings[address] = {0x10:(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1),
                                      0x11: (self.data_rate << 4 | self.data_range[1] << 2),
                                      0x12: 0x44,
