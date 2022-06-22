@@ -175,6 +175,7 @@ class daq:
                 else:
                     logging.info('dequeue data error, atribute NaN')
                     data[addr].append((np.NaN,)*(val['len']//2))
+                    pass
                 
         logging.info('Dequeue successfull')
         data_array = self.dt*(np.arange(len(data[addr]))).reshape((len(data[addr]),1))
