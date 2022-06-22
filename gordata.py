@@ -1,4 +1,3 @@
-from audioop import add
 from cmath import inf
 import os
 import queue
@@ -174,7 +173,7 @@ class daq:
                 logging.debug(qq)
                 if any(qq):
                     #logging.debug("Dequeuing data to {} and {}".format(addr, val))
-                    data[addr].append(qq)
+                    data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:
                     logging.info('dequeue data error, atribute NaN')
                     data[addr].append((np.NaN,)*(val['len']//2))
