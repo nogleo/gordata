@@ -155,7 +155,7 @@ class app_gd(qtw.QMainWindow):
         #np.save('devsens.npy', self.devsens)
 
     def readData(self):
-        self.datacache = pd.read_csv(self.filename, index_col=0)
+        self.datacache = pd.read_csv(self.filename, index_col='t')
         logging.debug(len(self.datacache))
 
         self.updatePlot(self.datacache)
@@ -218,8 +218,8 @@ class app_gd(qtw.QMainWindow):
         self.canv = MatplotlibCanvas(self)        
         self.ui.vLayout_plot.addWidget(self.canv)
         self.canv.axes.cla()
-        self.canv.axes.set_xlabel('Amplitude')
-        self.canv.axes.set_ylabel('Frequency')
+        self.canv.axes.set_xlabel('Time')
+        self.canv.axes.set_ylabel('Amplitude')
 
         try:
             self.canv.axes.plot(plotdata)
