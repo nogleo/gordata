@@ -151,13 +151,13 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/sensors')[0]
         logging.info("File :", self.filename)
-        key = list(dq.devices.keys())[self.ui.comboBox.currentIndex()]
-        dq.devices[key][-1] = self.filename[25:]
+        addr = int(self.ui.comboBox.currentText()[:3])
+        dq.devices[addr][-1] = self.filename[25:-4]
         self.loadDevices()
-        with open(root+'sensors.data', 'wb') as f:
-            pickle.dump(dq.devices, f)
+        # with open(root+'sensors.data', 'wb') as f:
+        #     pickle.dump(dq.devices, f)
         os.chdir(root)
-        np.save('devsens.npy', self.devsens)
+        #np.save('devsens.npy', self.devsens)
 
     def readData(self):
         self.datacache = pd.read_csv(self.filename, index_col='t')
@@ -254,7 +254,8 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = dq.devices.fromkeys([int(self.ui.comboBox.currentText()[:3])])
+        addr = int(self.ui.comboBox.currentText()[:3])
+        device = {addr: dq.devices[addr]}
         msg, ok = qtw.QInputDialog().getText(self,
                                              'Name your IMU',
                                              'Type the name of your IMU for calibration: ',
