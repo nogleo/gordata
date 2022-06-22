@@ -254,7 +254,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = dq.devices.fromkeys(int(self.ui.comboBox.currentText()[:3]))
+        device = dq.devices.fromkeys([int(self.ui.comboBox.currentText()[:3])])
         msg, ok = qtw.QInputDialog().getText(self,
                                              'Name your IMU',
                                              'Type the name of your IMU for calibration: ',
