@@ -171,6 +171,7 @@ class daq:
         while not self.q.empty():       #block dequeueing data
             for addr, val in self.devices.items():
                 qq = self.q.get()
+                logging.debug(qq)
                 if any(qq):
                     #logging.debug("Dequeuing data to {} and {}".format(addr, val))
                     data[addr].append(qq)
