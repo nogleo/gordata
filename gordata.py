@@ -33,7 +33,7 @@ class daq:
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
-        self.data_rate: int = 8  # 8=1666Hz 9=3330Hz 10=6660Hz
+        self.data_rate: int = 10  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range: list[int] = [1, 3]  # [16G, 2000DPS]
         self.q = queue.Queue()
         self.init_devices()
