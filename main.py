@@ -265,22 +265,22 @@ class app_gd(qtw.QMainWindow):
         else:
             logging.debug('cancelled')
             return
-        NS, ok = qtw.QInputDialog().getInt(self,
+        TS, ok = qtw.QInputDialog().getInt(self,
                                            'Sample Length',
                                            'Number seconds per Position: ',
                                            5, 1, 10, 1)
         if ok:
-            self.NS = NS*dq.fs
+            self.NS = TS*dq.fs
             logging.debug(self.NS)
         else:
             logging.debug('cancelled')
             return
-        ND, ok = qtw.QInputDialog().getInt(self,
+        TD, ok = qtw.QInputDialog().getInt(self,
                                            'Sample Length',
                                            'Number seconds per Rotation: ',
                                            5, 1, 10, 1)
         if ok:
-            self.ND = ND*dq.fs
+            self.ND = TD*dq.fs
             logging.debug(self.ND)
         else:
             logging.debug('cancelled')
@@ -294,21 +294,12 @@ class app_gd(qtw.QMainWindow):
                 'Move your IMU to the '+str(ii+1)+' position')
             if ok:
                 logging.debug('collecting position  ' + str(ii+1))
-
-                ti = tf = time.perf_counter()
-
-                while i < (ii+1)*self.NS:
-                    tf = time.perf_counter()
-                    if tf-ti >= dq.dt:
-                        ti = tf
-                        try:
-                            self.calibrationdata[i, :] = np.array(
-                                dq.pull_data(durr=dq.dt, devices=device))
-                            i += 1
-                        except Exception as e:
-                            logging.debug(e)
-                            self.calibrationdata[i, :] = 6*(0,)
-
+                try:
+                    self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=float(TS),
+                                                                                 device=device,
+                                                                                 raw=True).to_numpy()
+                except Exception as e:
+                    logging.warning('can`t pull data', exc_info=e)
             else:
                 logging.debug('cancelled')
                 return
@@ -321,18 +312,9 @@ class app_gd(qtw.QMainWindow):
             ok = self.showmessage('Rotate Cube Around Axis '+str(ii+1))
             if ok:
                 logging.info('collecting rotation  ' + str(ii+1))
-                ti = tf = time.perf_counter()
-                while i < (6*self.NS+((ii+1)*self.ND)):
-                    tf = time.perf_counter()
-                    if tf-ti >= dq.dt:
-                        ti = tf
-                        try:
-                            self.calibrationdata[i, :] = np.array(
-                                dq.pull_data(durr=dq.dt, devices=device))
-                            i += 1
-                        except Exception as e:
-                            logging.debug(e)
-                            self.calibrationdata[i, :] = 6*(0,)
+                self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = dq.pull_data(durr=float(TD), 
+                                                                                                    device=device,
+                                                                                                    raw=True).to_numpy()                
             else:
                 logging.debug('cancelled')
                 return
@@ -342,10 +324,10 @@ class app_gd(qtw.QMainWindow):
         df.to_csv(_path, index=False)
         sensor['acc_p'], sensor['gyr_p'] = dq.calibrate_imu(acc=self.calibrationdata[0:6*self.NS, 3:6],
                                                             gyr=self.calibrationdata[:, 0:3],
-                                                            Ts=self.NS*dq.fs,
-                                                            Td=self.ND*dq.fs,
+                                                            Ts=TS,
+                                                            Td=TD,
                                                             fs=dq.fs)
-        sensorframe = pd.DataFrame(sensor, columns=['acc_p', 'gyr_p'])
+        sensorframe = pd.DataFrame(sensor, columns=['acc_p', 'gyr_p'], index=False)
         sensorframe.to_csv(dq.root+'/sensors/{}.csv'.format(sensor['name']))
         logging.info("Garbage collection: {}".format(gc.collect()))
 

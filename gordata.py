@@ -147,9 +147,9 @@ class daq:
         logging.debug("Pulled data in %.6f s" % (t1-t0))
         if raw is False:
             return 
-        return self.dequeue_data()
+        return self.dequeue_data(raw=raw)
 
-    def dequeue_data(self) -> pd.DataFrame():
+    def dequeue_data(self, raw: bool=True) -> pd.DataFrame():
         data = {}
         if self.q is not None:
             for addr, val in self.devices.items():
@@ -167,7 +167,7 @@ class daq:
                         logging.info('dequeue data error, atribute NaN')
                         data[addr].append((np.NaN,)*(val[1]//2))
             for addr, val in self.devices.items():  #block translate from raw to meaningful data
-                if val[-1] is not None:
+                if val[-1] is not None and not raw:
                     if addr == 0x6a or addr == 0x6b:
                         params = pd.read_csv('./sensors/'+val[-1]+'.csv')
                         array = np.array(data[addr])
@@ -358,9 +358,3 @@ class dsp:
 
         dataFrame = pd.DataFrame(ah, t)
         return dataFrame
-
-
-
-
-        
-    
