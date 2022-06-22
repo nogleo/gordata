@@ -121,7 +121,7 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return acc_t.T, gyr_t.T
 
-    def pull_data(self, durr: int=None, devices=None, raw=True):
+    def pull_data(self, durr: float=0, devices=None):
         if durr == 0:
             durr = float('inf')
         if devices is None:
@@ -130,11 +130,13 @@ class daq:
             self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
         ii=0
+        N = int(durr*self.fs)
         self.running = True
-        while self.running and ii<durr*self.fs:
+        while self.running and ii<=N:
+            ii=+1    
+            logging.debug('N : {}'.format(ii))
             tf = time.perf_counter()
             if tf-ti>=self.dt:
-                ti = time.perf_counter()
                 for addr, val in devices.items():
                     try:
                         self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))                                       
@@ -143,43 +145,40 @@ class daq:
                         #q.put((np.NaN,)*val[1])
                         logging.debug("Could not pull data.", exc_info=e)
                         pass
-            ii=+1    
+                ti = time.perf_counter()
         t1 = time.perf_counter()
         logging.debug("Pulled data in %.6f s" % (t1-t0))
-        if raw is False:
-            return 
-        return self.dequeue_data(raw=raw)
+        return self.dequeue_data()
 
     def dequeue_data(self, raw: bool=True) -> pd.DataFrame():
-        data = {}
-        if self.q is not None:
+        data = {}        
+        for addr, val in self.devices.items():
+            columns = []
+            columns.append(val[-2])
+            data[addr] = []
+            logging.debug("Dequeuing data from {}".format(addr))
+        while self.q.qsize() > 0:       #block dequeueing data
             for addr, val in self.devices.items():
-                columns = []
-                columns.append(val[-2])
-                data[addr] = []
-                logging.debug("Dequeuing data from {}".format(addr))
-            while self.q.qsize() > 0:       #block dequeueing data
-                for addr, val in self.devices.items():
-                    qq = self.q.get()
-                    if any(qq):
-                        #logging.debug("Dequeuing data to {} and {}".format(addr, val))
-                        data[addr].append(unpack(val[2], bytearray(qq)))
-                    else:
-                        logging.info('dequeue data error, atribute NaN')
-                        data[addr].append((np.NaN,)*(val[1]//2))
-            for addr, val in self.devices.items():  #block translate from raw to meaningful data
-                if val[-1] is not None and not raw:
-                    if addr == 0x6a or addr == 0x6b:
-                        params = pd.read_csv('./sensors/'+val[-1]+'.csv')
-                        array = np.array(data[addr])
-                        data[addr] = self.translate_imu(acc=array[:,3:],
-                                                        gyr=array[:,:3],
-                                                        fs=self.fs,
-                                                        acc_param=(params['acc_p']),
-                                                        gyr_param=(params['gyr_p']))
-                    elif addr == 0x36 or addr==0x48:
-                        scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
-                        data[addr] = np.array(data[addr]*scale[0])               
+                qq = self.q.get()
+                if any(qq):
+                    #logging.debug("Dequeuing data to {} and {}".format(addr, val))
+                    data[addr].append(unpack(val[2], bytearray(qq)))
+                else:
+                    logging.info('dequeue data error, atribute NaN')
+                    data[addr].append((np.NaN,)*(val[1]//2))
+        for addr, val in self.devices.items():  #block translate from raw to meaningful data
+            if val[-1] is not None and not raw:
+                if addr == 0x6a or addr == 0x6b:
+                    params = pd.read_csv('./sensors/'+val[-1]+'.csv')
+                    array = np.array(data[addr])
+                    data[addr] = self.translate_imu(acc=array[:,3:],
+                                                    gyr=array[:,:3],
+                                                    fs=self.fs,
+                                                    acc_param=(params['acc_p']),
+                                                    gyr_param=(params['gyr_p']))
+                elif addr == 0x36 or addr==0x48:
+                    scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
+                    data[addr] = np.array(data[addr]*scale[0])               
         return pd.DataFrame(data, index=np.arange(len(data[addr]))/self.fs, columns=columns)
 
     def save_data(self, df: pd.DataFrame):
