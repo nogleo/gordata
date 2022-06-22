@@ -138,14 +138,14 @@ class daq:
             devices = self.devices
         if not self.q.empty():
             self.q.queue.clear()        
-        t0 = ti = tf = time.perf_counter()
-        ii=0
         N = durr*self.fs
         self.running = True
         value = []
         for addr, val in devices.items():
             value.append([addr, val['reg'], val['len']])
 
+        ii=0
+        t0 = ti = tf = time.perf_counter()
         while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
