@@ -63,11 +63,11 @@ class app_gd(qtw.QMainWindow):
         logging.debug("Multithreading with maximum %d threads" %
                       self.threadpool.maxThreadCount())
 
-        self.toolbar = None
         self.canv = MatplotlibCanvas(self)
+        self.toolbar = Navi(self.canv,self.ui.hLayout_plot)
         # self.ui.vLayout_plot.addWidget(self.canv)
-        self.toolbarTF = None
         self.canvTF = MatplotlibCanvas(self)
+        self.toolbarTF = Navi(self,self.ui.tab_plot)
         # self.ui.vLayout_TF.addWidget(self.canvTF)
 
     def initDevices(self):
@@ -175,7 +175,7 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/data')[0]
         logging.debug("File : {}".format(self.filename))
-        self.datacache = pd.read_csv(self.filename, index_col='t')
+        self.datacache = pd.read_csv(self.filename)
         try:
             self.ui.combo_TF.clear()
         except Exception as e:
@@ -194,8 +194,6 @@ class app_gd(qtw.QMainWindow):
             self.canvTF.close()
             self.ui.hLayout_TF.removeWidget(self.toolbarTF)
             self.ui.vLayout_TF.removeWidget(self.canvTF)
-            self.toolbarTF = None
-            self.canvTF = None
         except Exception as e:
             logging.debug(f"can`t remove widget(s)", exc_info=e)
             pass
@@ -223,8 +221,6 @@ class app_gd(qtw.QMainWindow):
         try:
             self.ui.vLayout_plot.removeWidget(self.canv)
             self.ui.hLayout_plot.removeWidget(self.toolbar)
-            self.toolbar = None
-            self.canv = None
         except Exception as e:
             logging.debug('warning =>> ', exc_info=e)
             pass
