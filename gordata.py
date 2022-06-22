@@ -196,7 +196,7 @@ class daq:
                     array = array*scale 
             data_array = np.hstack((data_array,array)) 
         logging.info('Generating DataFrame')              
-        return pd.DataFrame(data_array, columns=columns, index='t')
+        return pd.DataFrame(data_array, columns=columns)
 
     def save_data(self, df: pd.DataFrame):
         
