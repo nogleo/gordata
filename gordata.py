@@ -178,10 +178,8 @@ class daq:
                                                         gyr_param=(params['gyr_p']))
                     elif addr == 0x36 or addr==0x48:
                         scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
-                        data[addr] = np.array(data[addr]*scale[0])
-                    columns.append(['t'])
-                    data['t'] =  np.arange(len(data[addr]))/self.fs
-        return pd.DataFrame(data, index='t', columns=columns)
+                        data[addr] = np.array(data[addr]*scale[0])               
+        return pd.DataFrame(data, index=np.arange(len(data[addr]))/self.fs, columns=columns)
 
     def save_data(self, df: pd.DataFrame):
         path = self.root+'/data/'
