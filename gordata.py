@@ -141,7 +141,8 @@ class daq:
                     except Exception as e:
                         self.q.put((0,)*val[1])
                         #q.put((np.NaN,)*val[1])
-                        logging.warning("Could not pull data. Error: ", exc_info=e)
+                        logging.debug("Could not pull data.", exc_info=e)
+                        pass
             ii=+1    
         t1 = time.perf_counter()
         logging.debug("Pulled data in %.6f s" % (t1-t0))
