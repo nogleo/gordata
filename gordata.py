@@ -192,11 +192,12 @@ class daq:
                 elif addr == 0x36 or addr==0x48:
                     scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
                     data[addr] = np.array(data[addr]*scale[0])   
-            data_array = np.hstack((data_array,array))           
+            data_array = np.hstack((data_array,array)) 
+            logging.info(data_array.shape)          
         return pd.DataFrame(data_array, columns=columns, index='t')
 
     def save_data(self, df: pd.DataFrame):
-        df.head()
+        
         path = self.root+'/data/'
         try:
             num: int = os.listdir(path).__len__()
