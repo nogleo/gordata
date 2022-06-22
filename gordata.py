@@ -132,7 +132,7 @@ class daq:
         ii=0
         N = durr*self.fs
         self.running = True
-        while self.running and ii<=N:
+        while self.running and ii<N:
             logging.debug('N : {}'.format(ii))
             tf = time.perf_counter()
             if tf-ti>=self.dt:
