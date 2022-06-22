@@ -166,7 +166,8 @@ class daq:
         for addr, val in self.devices.items():
             data[addr] = []
             columns.append(val['lbl'])
-        while self.q.not_empty:       #block dequeueing data
+        logging.info('start dequeueing...')
+        while self.q.not_empty():       #block dequeueing data
             for addr, val in self.devices.items():
                 qq = self.q.get()
                 if any(qq):
