@@ -155,7 +155,7 @@ class app_gd(qtw.QMainWindow):
         #np.save('devsens.npy', self.devsens)
 
     def readData(self):
-        self.datacache = pd.read_csv(self.filename, index_col=0)
+        self.datacache = pd.read_csv(self.filename, index_col=0, keep_default_na=False)
         logging.debug(len(self.datacache))
 
         self.updatePlot(self.datacache)
@@ -208,7 +208,7 @@ class app_gd(qtw.QMainWindow):
             logging.warning('warning =>> '+str(e))
             pass
         self.canvTF.draw()
-        self.canvTF.fig.tight_layout()
+        
 
     def updatePlot(self, plotdata):
         plt.clf()
@@ -217,14 +217,14 @@ class app_gd(qtw.QMainWindow):
         except Exception as e:
             logging.debug('warning =>> ', exc_info=e)
             pass
-        self.canv.axes.cla()
         self.canv = MatplotlibCanvas(self)
+
         
         self.ui.vLayout_plot.addWidget(self.canv)
 
         try:
             self.canv.axes.plot(plotdata)
-            self.canv.axes.legend(plotdata.columns)
+            
         except Exception as e:
             logging.debug('Can`t plot data ==>', exc_info=e)
         self.canv.draw()
