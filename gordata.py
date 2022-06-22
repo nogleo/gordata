@@ -180,7 +180,7 @@ class daq:
                         scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
                         data[addr] = np.array(data[addr]*scale[0])
                     columns.append(['t'])
-                    data['t'] =  np.arange(len(data)/self.fs)
+                    data['t'] =  np.arange(len(data[addr]))/self.fs
         return pd.DataFrame(data, index='t', columns=columns)
 
     def save_data(self, df: pd.DataFrame):
