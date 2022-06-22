@@ -155,7 +155,7 @@ class app_gd(qtw.QMainWindow):
         #np.save('devsens.npy', self.devsens)
 
     def readData(self):
-        self.datacache = pd.read_csv(self.filename, index_col=0, keep_default_na=False)
+        self.datacache = pd.read_csv(self.filename, index_col=0)
         logging.debug(len(self.datacache))
 
         self.updatePlot(self.datacache)
@@ -191,10 +191,8 @@ class app_gd(qtw.QMainWindow):
         except Exception as e:
             logging.debug(f"can`t remove widget(s)", exc_info=e)
             pass
-        self.canvTF = MatplotlibCanvas(self)
-        
-        self.ui.vLayout_TF.addWidget(self.canvTF, 10)
-        
+        self.canvTF = MatplotlibCanvas(self)        
+        self.ui.vLayout_TF.addWidget(self.canvTF, 10)        
         self.canvTF.axes.cla()
         t, f, S_db = dsp.spect(df=data, print=False)
         self.canvTF.axes.set_xlabel('Time')
@@ -217,13 +215,15 @@ class app_gd(qtw.QMainWindow):
         except Exception as e:
             logging.debug('warning =>> ', exc_info=e)
             pass
-        self.canv = MatplotlibCanvas(self)
-
-        
+        self.canv = MatplotlibCanvas(self)        
         self.ui.vLayout_plot.addWidget(self.canv)
+        self.canv.axes.cla()
+        self.canv.axes.set_xlabel('Amplitude')
+        self.canv.axes.set_ylabel('Frequency')
 
         try:
             self.canv.axes.plot(plotdata)
+            self.canv.axes.legend(plotdata.columns)
             
         except Exception as e:
             logging.debug('Can`t plot data ==>', exc_info=e)
