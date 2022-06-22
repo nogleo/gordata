@@ -296,7 +296,7 @@ class app_gd(qtw.QMainWindow):
             if ok:
                 logging.debug('collecting position  ' + str(ii+1))
                 try:
-                    self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=float(TS),
+                    self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=TS,
                                                                                  devices=device,
                                                                                  raw=True).to_numpy()
                 except Exception as e:
@@ -313,7 +313,7 @@ class app_gd(qtw.QMainWindow):
             ok = self.showmessage('Rotate Cube Around Axis '+str(ii+1))
             if ok:
                 logging.info('collecting rotation  ' + str(ii+1))
-                self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = dq.pull_data(durr=float(TD), 
+                self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = dq.pull_data(durr=TD, 
                                                                                                     devices=device,
                                                                                                     raw=True).to_numpy()                
             else:

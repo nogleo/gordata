@@ -121,28 +121,28 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return acc_t.T, gyr_t.T
 
-    def pull_data(self, durr: float=None, devices=None, raw=True):
-        if durr == 0.0:
+    def pull_data(self, durr: int=None, devices=None, raw=True):
+        if durr == 0:
             durr = float('inf')
         if devices is None:
             devices = self.devices
         if self.q.not_empty:
             self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
+        ii=0
         self.running = True
-        while self.running and tf-t0<= durr:
+        while self.running and ii<durr*self.fs:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
                 for addr, val in devices.items():
                     try:
-                        self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
-                        
+                        self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))                                       
                     except Exception as e:
                         self.q.put((0,)*val[1])
                         #q.put((np.NaN,)*val[1])
                         logging.warning("Could not pull data. Error: ", exc_info=e)
-                
+            ii=+1    
         t1 = time.perf_counter()
         logging.debug("Pulled data in %.6f s" % (t1-t0))
         if raw is False:
