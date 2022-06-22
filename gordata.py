@@ -16,7 +16,6 @@ from scipy.fftpack import fft, ifft, fftfreq
 class daq:
     def __init__(self):
         self.__name__ = "daq"
-        logging.basicConfig(level=logging.DEBUG)
         try:
             self.bus = smbus.SMBus(1)
             logging.info("I2C bus successfully initialized")
@@ -170,9 +169,7 @@ class daq:
         while not self.q.empty():       #block dequeueing data
             for addr, val in self.devices.items():
                 qq = self.q.get()
-                logging.debug(qq)
                 if any(qq):
-                    #logging.debug("Dequeuing data to {} and {}".format(addr, val))
                     data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:
                     logging.info('dequeue data error, atribute NaN')

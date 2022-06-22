@@ -41,7 +41,7 @@ class Worker(qtc.QRunnable):
 class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.INFO)
         global dq, dsp
         dq = gd.daq()
         dsp = gd.dsp()
