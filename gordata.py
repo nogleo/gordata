@@ -1,4 +1,5 @@
 from cmath import inf
+from optparse import Values
 import os
 import queue
 from struct import unpack
@@ -135,23 +136,25 @@ class daq:
             durr = float('inf')
         if devices is None:
             devices = self.devices
-        if self.q.not_empty:
+        if not self.q.empty():
             self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
         ii=0
         N = durr*self.fs
         self.running = True
+        value = []
+        for addr, val in devices.items():
+            value.append([addr, val['reg'], val['len']])
+
         while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
-                logging.debug('N : {}'.format(ii))
                 ii+=1    
-                for addr, val in devices.items():
+                for val in value:
                     try:
-                        self.q.put(self.bus.read_i2c_block_data(addr, val['reg'], val['len']))                                       
-                    except Exception as e:
-                        self.q.put((0,)*val['len'])
-                        logging.debug("Could not pull data.", exc_info=e)
+                        self.q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
+                    except:
+                        self.q.put(0)
                         pass
                 ti = time.perf_counter()
         t1 = time.perf_counter()
