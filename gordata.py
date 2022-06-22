@@ -176,24 +176,24 @@ class daq:
                     logging.info('dequeue data error, atribute NaN')
                     data[addr].append((np.NaN,)*(val['len']//2))
                 
-        
+        logging.info('Dequeue successfull')
         data_array = self.dt*(np.arange(len(data[addr]))).reshape((len(data[addr]),1))
         for addr, val in self.devices.items():
               #block translate from raw to meaningful data
+            array = np.array(data[addr]).reshape((len(data[addr], val['len']//2)))
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
-                    array = np.array(data[addr]).reshape((len(data[addr], val['len']//2)))
                     params = pd.read_csv('./sensors/'+val['cal']+'.csv')
-                    data[addr] = self.translate_imu(acc=array[:,3:],
+                    array = self.translate_imu(acc=array[:,3:],
                                                     gyr=array[:,:3],
                                                     fs=self.fs,
                                                     acc_param=(params['acc_p']),
                                                     gyr_param=(params['gyr_p']))
                 elif addr == 0x36 or addr==0x48:
-                    scale = pd.read_csv('./sensors/'+val[-1]+'.csv')
-                    data[addr] = np.array(data[addr]*scale[0])   
+                    scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
+                    array = array*scale 
             data_array = np.hstack((data_array,array)) 
-            logging.info(data_array.shape)          
+        logging.info('Generating DataFrame')              
         return pd.DataFrame(data_array, columns=columns, index='t')
 
     def save_data(self, df: pd.DataFrame):
