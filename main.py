@@ -155,7 +155,7 @@ class app_gd(qtw.QMainWindow):
         #np.save('devsens.npy', self.devsens)
 
     def readData(self):
-        self.datacache = pd.read_csv(self.filename)
+        self.datacache = pd.read_csv(self.filename, index_col=0)
         logging.debug(len(self.datacache))
 
         self.updatePlot(self.datacache)
@@ -171,7 +171,7 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/data')[0]
         logging.debug("File : {}".format(self.filename))
-        self.datacache = pd.read_csv(self.filename)
+        self.datacache = pd.read_csv(self.filename, index_col=0)
         try:
             self.ui.combo_TF.clear()
         except Exception as e:
@@ -187,15 +187,14 @@ class app_gd(qtw.QMainWindow):
         frame = str(self.ui.combo_TF.currentText())
         data = self.datacache[[frame]]
         try:
-            self.ui.hLayout_TF.removeWidget(self.toolbarTF)
             self.ui.vLayout_TF.removeWidget(self.canvTF)
         except Exception as e:
             logging.debug(f"can`t remove widget(s)", exc_info=e)
             pass
         self.canvTF = MatplotlibCanvas(self)
-        self.toolbarTF = Navi(self.canvTF, self.ui)
+        
         self.ui.vLayout_TF.addWidget(self.canvTF, 10)
-        self.ui.hLayout_TF.addWidget(self.toolbarTF)
+        
         self.canvTF.axes.cla()
         t, f, S_db = dsp.spect(df=data, print=False)
         self.canvTF.axes.set_xlabel('Time')
@@ -212,14 +211,13 @@ class app_gd(qtw.QMainWindow):
         self.canvTF.fig.tight_layout()
 
     def updatePlot(self, plotdata):
-        #plt.clf()
-        #try:
-        #    self.ui.vLayout_plot.removeWidget(self.canv)
-        #    
-        #except Exception as e:
-        #    logging.debug('warning =>> ', exc_info=e)
-        #    pass
-        #self.canv.axes.cla()
+        plt.clf()
+        try:
+            self.ui.vLayout_plot.removeWidget(self.canv)
+        except Exception as e:
+            logging.debug('warning =>> ', exc_info=e)
+            pass
+        self.canv.axes.cla()
         self.canv = MatplotlibCanvas(self)
         
         self.ui.vLayout_plot.addWidget(self.canv)
