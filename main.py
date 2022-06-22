@@ -106,8 +106,8 @@ class app_gd(qtw.QMainWindow):
             logging.warning("can`t clear comobo box", exc_info=e)
             pass
         for address, device in dq.devices.items():
-            self.devices[str(address)] = device[-1]
-            self.ui.comboBox.addItem(str(address)+'--'+str(device[-1]))
+            self.devices[str(address)] = device['cal']
+            self.ui.comboBox.addItem(str(address)+'--'+str(device['cal']))
             logging.debug(f"Device {address} loaded")
         logging.debug(self.devices)
 
