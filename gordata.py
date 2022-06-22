@@ -133,10 +133,10 @@ class daq:
         N = durr*self.fs
         self.running = True
         while self.running and ii<=N:
-            ii=+1    
             logging.debug('N : {}'.format(ii))
             tf = time.perf_counter()
             if tf-ti>=self.dt:
+                ii+=1    
                 for addr, val in devices.items():
                     try:
                         self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))                                       
