@@ -182,7 +182,7 @@ class daq:
         data_array = self.dt*(np.arange(len(data[addr]))).reshape((len(data[addr]),1))
         for addr, val in self.devices.items():
               #block translate from raw to meaningful data
-            array = np.array(data[addr]).reshape((len(data[addr], val['len']//2)))
+            array = np.array(data[addr]).reshape((len(data[addr]), val['len']//2))
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
                     params = pd.read_csv('./sensors/'+val['cal']+'.csv')
