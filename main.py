@@ -296,7 +296,7 @@ class app_gd(qtw.QMainWindow):
                 logging.debug('collecting position  ' + str(ii+1))
                 try:
                     self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=float(TS),
-                                                                                 device=device,
+                                                                                 devices=device,
                                                                                  raw=True).to_numpy()
                 except Exception as e:
                     logging.warning('can`t pull data', exc_info=e)
@@ -313,7 +313,7 @@ class app_gd(qtw.QMainWindow):
             if ok:
                 logging.info('collecting rotation  ' + str(ii+1))
                 self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = dq.pull_data(durr=float(TD), 
-                                                                                                    device=device,
+                                                                                                    devices=device,
                                                                                                     raw=True).to_numpy()                
             else:
                 logging.debug('cancelled')
