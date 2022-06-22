@@ -171,7 +171,7 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/data')[0]
         logging.debug("File : {}".format(self.filename))
-        self.datacache = pd.read_csv(self.filename, index_col=0)
+        self.datacache = pd.read_csv(self.filename, index_col='t')
         try:
             self.ui.combo_TF.clear()
         except Exception as e:
