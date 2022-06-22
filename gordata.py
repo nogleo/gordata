@@ -133,9 +133,9 @@ class daq:
         N = durr*self.fs
         self.running = True
         while self.running and ii<N:
-            logging.debug('N : {}'.format(ii))
             tf = time.perf_counter()
             if tf-ti>=self.dt:
+                logging.debug('N : {}'.format(ii))
                 ii+=1    
                 for addr, val in devices.items():
                     try:
