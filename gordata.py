@@ -130,7 +130,7 @@ class daq:
             self.q.queue.clear()        
         t0 = ti = tf = time.perf_counter()
         ii=0
-        N = int(durr*self.fs)
+        N = durr*self.fs
         self.running = True
         while self.running and ii<=N:
             ii=+1    
