@@ -134,7 +134,7 @@ class daq:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
-                for addr, val in devices.items():
+                for addr, val in devices:
                     try:
                         self.q.put(self.bus.read_i2c_block_data(addr, val[0], val[1]))               
                         

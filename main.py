@@ -254,7 +254,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        device = dq.devices[list(dq.devices.keys())[self.ui.comboBox.currentIndex()]]
+        device = dq.devices[(dq.devices.keys())[self.ui.comboBox.currentData()]]
         msg, ok = qtw.QInputDialog().getText(self,
                                              'Name your IMU',
                                              'Type the name of your IMU for calibration: ',
@@ -296,7 +296,7 @@ class app_gd(qtw.QMainWindow):
                 logging.debug('collecting position  ' + str(ii+1))
                 try:
                     self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=float(TS),
-                                                                                 devices=device,
+                                                                                 devices=[device],
                                                                                  raw=True).to_numpy()
                 except Exception as e:
                     logging.warning('can`t pull data', exc_info=e)
