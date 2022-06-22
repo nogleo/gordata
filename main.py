@@ -2,6 +2,9 @@ import logging
 import gc
 import pandas as pd
 import numpy as np
+import matplotlib
+matplotlib.use('Qt5Agg')
+import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationToolbar2QT as Navi
 import gordata as gd
@@ -11,18 +14,15 @@ import time
 import pickle
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
-import matplotlib
-import matplotlib.pyplot as plt
-matplotlib.use('Qt5Agg')
+from PyQt5 import QtGui as qui
 root = os.getcwd()
 
-
 class MatplotlibCanvas(FigureCanvasQTAgg):
-    def __init__(self, parent=None, dpi=50):
-        self.fig = Figure(figsize=(6, 6), tight_layout=True, dpi=dpi)
-        self.axes = self.fig.add_subplot(111)
-        super(MatplotlibCanvas, self).__init__(self.fig)
-        self.fig.tight_layout()
+    def __init__(self, parent=None, dpi=80):
+        fig = Figure(figsize=(8, 6), tight_layout=True, dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(MatplotlibCanvas, self).__init__(fig)
+        
 
 
 class Worker(qtc.QRunnable):
@@ -41,9 +41,9 @@ class Worker(qtc.QRunnable):
 class app_gd(qtw.QMainWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._main = qtw.QWidget()
         logging.basicConfig(level=logging.DEBUG)
-        global dsp
+        global dq, dsp
+        dq = gd.daq()
         dsp = gd.dsp()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
@@ -63,20 +63,12 @@ class app_gd(qtw.QMainWindow):
         self.threadpool = qtc.QThreadPool()
         logging.debug("Multithreading with maximum %d threads" %
                       self.threadpool.maxThreadCount())
-
-        self.canv = MatplotlibCanvas()
-        self.ui.vLayout_plot.addWidget(self.canv)
-        self.ui.hLayout_plot.addWidget(Navi(self, parent))
-        self.toolbar = Navi(self.canv, self.ui.tab_plot)
-        #self.ui.vLayout_plot.addWidget(self.canv)
-        self.canvTF = MatplotlibCanvas()
-        self.toolbarTF = qtw.QTabBar()
-        ## self.ui.vLayout_TF.addWidget(self.canvTF)
-
+        self.canv = MatplotlibCanvas(self)
+        
+        
     def initDevices(self):
         #dn = nog.daq()
-        global dq
-        dq = gd.daq()
+        
 
         self.devices = {}
         '''
@@ -163,7 +155,8 @@ class app_gd(qtw.QMainWindow):
         #np.save('devsens.npy', self.devsens)
 
     def readData(self):
-        self.datacache = pd.read_csv(self.filename, index_col='t')
+        self.datacache = pd.read_csv(self.filename)
+        logging.debug(len(self.datacache))
 
         self.updatePlot(self.datacache)
 
@@ -200,7 +193,7 @@ class app_gd(qtw.QMainWindow):
             logging.debug(f"can`t remove widget(s)", exc_info=e)
             pass
         self.canvTF = MatplotlibCanvas(self)
-        self.toolbarTF = Navi(self.canvTF, self.ui.tab_TF)
+        self.toolbarTF = Navi(self.canvTF, self.ui)
         self.ui.vLayout_TF.addWidget(self.canvTF, 10)
         self.ui.hLayout_TF.addWidget(self.toolbarTF)
         self.canvTF.axes.cla()
@@ -219,18 +212,17 @@ class app_gd(qtw.QMainWindow):
         self.canvTF.fig.tight_layout()
 
     def updatePlot(self, plotdata):
-        plt.clf()
-        try:
-            self.ui.vLayout_plot.removeWidget(self.canv)
-            self.ui.hLayout_plot.removeWidget(self.toolbar)
-        except Exception as e:
-            logging.debug('warning =>> ', exc_info=e)
-            pass
+        #plt.clf()
+        #try:
+        #    self.ui.vLayout_plot.removeWidget(self.canv)
+        #    
+        #except Exception as e:
+        #    logging.debug('warning =>> ', exc_info=e)
+        #    pass
+        #self.canv.axes.cla()
         self.canv = MatplotlibCanvas(self)
-        self.toolbar = Navi(self.canv, self.ui.tab_plot)
-        self.ui.hLayout_plot.addWidget(self.toolbar)
+        
         self.ui.vLayout_plot.addWidget(self.canv)
-        self.canv.axes.cla()
 
         try:
             self.canv.axes.plot(plotdata)
