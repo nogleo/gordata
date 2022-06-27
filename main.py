@@ -2,6 +2,9 @@ import logging
 import gc
 import pandas as pd
 import numpy as np
+from PyQt5 import QtCore as qtc
+from PyQt5 import QtWidgets as qtw
+from PyQt5 import QtGui as qui
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -12,9 +15,6 @@ from gui import Ui_MainWindow
 import os
 import time
 import pickle
-from PyQt5 import QtCore as qtc
-from PyQt5 import QtWidgets as qtw
-from PyQt5 import QtGui as qui
 root = os.getcwd()
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -194,17 +194,22 @@ class app_gd(qtw.QMainWindow):
         self.canvTF = MatplotlibCanvas(self)        
         self.ui.vLayout_TF.addWidget(self.canvTF, 10)        
         self.canvTF.axes.cla()
-        t, f, S_db = dsp.spect(df=data, print=False)
+        if self.ui.comboBox_2.currentText() == 'STFT':
+            t, f, S_db = dsp.spect(df=data, print=False)
+        elif self.ui.comboBox_2.currentText() == 'WSST':
+            t, f, S_db = dsp.WSST(df=data,return_fig=False,fs=dq.fs)
         self.canvTF.axes.set_xlabel('Time')
         self.canvTF.axes.set_ylabel('Frequency')
         #self.canvTF.axes.set_title('Time-Frequency - {}'.format(frame))
         try:
             #self.canvTF.axes.pcolormesh(t, f, S_db, shading='gouraud',  cmap='turbo')
-            self.canvTF.axes.imshow(np.flip(S_db, axis=0), aspect='auto', cmap='turbo',
+            self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
                                     interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
         except Exception as e:
             logging.warning('warning =>> '+str(e))
             pass
+        #self.canvTF.colorbar()
+        self.canvTF.axes.yscale('log')
         self.canvTF.draw()
         
 

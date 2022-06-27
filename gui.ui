@@ -48,7 +48,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tab_daq">
        <attribute name="title">
@@ -293,6 +293,20 @@
         </item>
         <item row="0" column="2">
          <layout class="QHBoxLayout" name="hLayout_TF">
+          <item>
+           <widget class="QComboBox" name="comboBox_2">
+            <item>
+             <property name="text">
+              <string>STFT</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>WSST</string>
+             </property>
+            </item>
+           </widget>
+          </item>
           <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">

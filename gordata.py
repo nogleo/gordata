@@ -13,7 +13,8 @@ import scipy.integrate as intg
 import ahrs
 from matplotlib import pyplot as plt
 import logging
-from scipy.fftpack import fft, ifft, fftfreq
+from scipy.fftpack import fft, ifft, fftfreq, fftshift
+import ssqueezepy as sq
 class daq:
     def __init__(self):
         self.__name__ = "daq"
@@ -246,7 +247,7 @@ class dsp:
         return fig
 
 
-    def FDI(self, data, factor=1, NFFT=None):
+    def WOLA(self, data, factor=1, NFFT=None):
         if NFFT is None:
             n = self.fs//4
         else:
@@ -262,10 +263,18 @@ class dsp:
         for ii in range(0, N-n, n//2):
             Y = _data[ii:ii+n,:]*w
             k =  (1j*2*np.pi*fftfreq(len(Y), self.dt).reshape((n,1)))
-            y = (ifft(np.vstack((np.zeros((factor,width)),scipy.fft.fft(Y, axis=0)[factor:]/(k[factor:]))), axis=0))
+            y = (ifft(np.vstack((np.zeros((factor,width)),fft(Y, axis=0)[factor:]/(k[factor:]))), axis=0))
             Data[ii:ii+n,:] += y
         return np.real(Data[2*n:-2*n,:])
-        
+
+    def FDI(self, data):
+        Y = fft(data, axis=0)
+        f = fftfreq(data, self.dt)
+        Y[0,:] = 0
+        y=ifft(Y/(1j*2*np.pi*f), axis=0)
+        return y[:len(data),:]
+
+
     def spect(self, df: pd.DataFrame=None, dbmin=80, print: bool=True, freqlims: tuple=(1,800)):
         for frame in df:
             f, t, Sxx = scipy.signal.spectrogram(df[frame], fs=self.fs, axis=0, scaling='spectrum', nperseg=self.fs//2, noverlap=self.fs//4, detrend=False, mode='psd', window='hann')
@@ -281,7 +290,7 @@ class dsp:
                 plt.tight_layout()
                 plt.show()
             else:
-                return t, f, 20*np.log10(abs(Sxx))
+                return t, f, np.flip(20*np.log10(abs(Sxx)), axis=0)
 
     def FDD(self, _data, factor=1, NFFT=None):
         if NFFT is None:
@@ -374,3 +383,38 @@ class dsp:
 
         dataFrame = pd.DataFrame(ah, t)
         return dataFrame
+
+    def vizspect(self, tt, ff, Sxx, Title, xlims=None, ylims=None, fscale='linear', fig=None, return_fig=False):
+        if fig is None:
+            fig = plt.figure() 
+        ax = fig.add_subplot(111)
+        plt.yscale(fscale)
+        spec = ax.imshow(Sxx, aspect='auto', cmap='turbo', extent=[tt[0], tt[-1], ff[0], ff[-1]])
+        plt.colorbar(spec)
+        ax.set_xlim(xlims)
+        ax.set_ylim(ylims)
+        ax.set_title(Title)
+        ax.set_xlabel('Time [s]')
+        ax.set_ylabel('Frequency [Hz]')
+        return fig
+
+    def WSST(self, df: pd.DataFrame, fs, return_fig=True): 
+        figs = []
+        results = []
+        for frame in df.columns:
+            Tx, _, ssqfreqs, _ = sq.ssq_cwt(df[frame].to_numpy() ,
+                                                wavelet='gmw',
+                                                fs=fs,
+                                                nv=32,
+                                                ssq_freqs='linear',
+                                                maprange='peak',
+                                                padtype='reflect')
+
+            
+            #psd_wsst = Tx.real**2 + Tx.imag**2
+            if return_fig:
+                return self.vizspect(df.index.to_numpy(), ssqfreqs, Tx.real, frame, fscale='linear')
+            else:
+                return df.index.to_numpy(), ssqfreqs, Tx.real
+        
+        
