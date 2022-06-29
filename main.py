@@ -48,16 +48,16 @@ class app_gd(qtw.QMainWindow):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
         self.msg: str = ""
-        self.ui.startbutton.clicked.connect(self.collect)
-        self.ui.stopbutton.clicked.connect(self.stop_collect)
-        self.ui.openbttn.clicked.connect(self.getFile)
-        self.ui.calibutton.clicked.connect(self.calibration)
-        self.ui.linkSensor.clicked.connect(self.linkSens)
-        self.ui.linkSensor.setEnabled(False)
-        self.ui.calibutton.setEnabled(False)
-        self.ui.initbttn.clicked.connect(self.initDevices)
-        self.ui.loadbttn.clicked.connect(self.loadTF)
-        self.ui.combo_TF.currentIndexChanged.connect(self.plotTF)
+        self.ui.pButton_start.clicked.connect(self.collect)
+        self.ui.pButton_stop.clicked.connect(self.stop_collect)
+        self.ui.pButton_load_viz.clicked.connect(self.load_viz)
+        self.ui.pButton_calib.clicked.connect(self.calibration)
+        self.ui.pButthon_link.clicked.connect(self.linkSens)
+        self.ui.pButthon_link.setEnabled(False)
+        self.ui.pButton_calib.setEnabled(False)
+        self.ui.pButton_scan.clicked.connect(self.initDevices)
+        self.ui.cBox_data.currentIndexChanged.connect(self.updatePlot)
+        self.ui.cBox_method.currentIndexChanged.connect(self.updatePlot)
         self.data_buffer: pd.DataFrame = pd.DataFrame()
         self.datacache = []
         self.threadpool = qtc.QThreadPool()
@@ -67,23 +67,10 @@ class app_gd(qtw.QMainWindow):
         
         
     def initDevices(self):
-        #dn = nog.daq()
-        
-
-        self.devices = {}
-        '''
-        try:
-            with open(root+'sensors.data', 'rb') as f:
-                dn.dev = pickle.load(f)
-            logging.debug(root+'sensors.data loaded')
-        except:
-            logging.debug('no previous sensor data')
-        for _dev in dn.dev:
-            self.devsens[str(_dev[0])] = str(_dev[-1])
-        '''
+        self.device_list = {}
         self.loadDevices()
-        self.ui.linkSensor.setEnabled(True)
-        self.ui.calibutton.setEnabled(True)
+        self.ui.pButthon_link.setEnabled(True)
+        self.ui.pButton_calib.setEnabled(True)
 
     def pull(self):
         for addr in dq.devices.keys():
@@ -92,24 +79,28 @@ class app_gd(qtw.QMainWindow):
 
         dq.save_data(dq.pull_data(durr=float(self.ui.label.text())))
 
-        self.ui.startbutton.setEnabled(True)
+        self.ui.pButton_start.setEnabled(True)
 
     def collect(self):
-        self.ui.startbutton.setEnabled(False)
+        self.ui.pButton_start.setEnabled(False)
         worker = Worker(self.pull)
         self.threadpool.start(worker)
 
     def loadDevices(self):
         try:
-            self.ui.comboBox.clear()
+            self.ui.treeWidget.clear()
         except Exception as e:
             logging.warning("can`t clear comobo box", exc_info=e)
             pass
+        index=0
         for address, device in dq.devices.items():
-            self.devices[str(address)] = device['cal']
-            self.ui.comboBox.addItem(str(address)+'--'+str(device['cal']))
+            item = qtw.QTreeWidgetItem(str(address))
+            item.addChild(qtw.QTreeWidgetItem(device['cal']))
+            self.ui.treeWidget.insertTopLevelItem(index, item)
+            index += 1
+            
             logging.debug(f"Device {address} loaded")
-        logging.debug(self.devices)
+        
 
     def interrupt(self):
         dq.running = False
@@ -137,101 +128,76 @@ class app_gd(qtw.QMainWindow):
             pass
 
     def linkSens(self):
-        os.chdir(root)
-        try:
-            os.chdir('sensors')
-        except:
-            pass
-
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/sensors')[0]
         logging.info("File :", self.filename)
-        addr = int(self.ui.comboBox.currentText()[:3])
-        dq.devices[addr][-1] = self.filename[25:-4]
+        addr = self.ui.treeWidget.currentItem().text(0)
+        dq.devices[int(addr)][-1] = self.filename[25:-4]
         self.loadDevices()
-        # with open(root+'sensors.data', 'wb') as f:
-        #     pickle.dump(dq.devices, f)
-        os.chdir(root)
-        #np.save('devsens.npy', self.devsens)
+        
 
-    def readData(self):
-        self.datacache = pd.read_csv(self.filename, index_col='t')
-        logging.debug(len(self.datacache))
-
-        self.updatePlot(self.datacache)
-
-    def loadTF(self):
-        self.datacache = None
-        os.chdir(root)
+    def load_viz(self):
+        self.datacache = pd.DataFrame()
+        files = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/data')
+        logging.debug("File : {}".format(files))
+        for file in files:
+            self.datacache.append(pd.read_csv(file, index_col='t'))[0]
         try:
-            os.chdir('data')
-        except:
-            pass
-
-        self.filename = qtw.QFileDialog.getOpenFileName(
-            directory='home/pi/gordata/data')[0]
-        logging.debug("File : {}".format(self.filename))
-        self.datacache = pd.read_csv(self.filename, index_col='t')
-        try:
-            self.ui.combo_TF.clear()
+            self.ui.cBox_data.clear()
         except Exception as e:
             logging.warning("can`t clear combo box", exc_info=e)
             pass
         for item in self.datacache.columns:
-            self.ui.combo_TF.addItem(item)
-        self.ui.combo_TF.setCurrentIndex(0)
-        # self.plotTF()
-
-    def plotTF(self):
-        plt.clf()
-        frame = str(self.ui.combo_TF.currentText())
-        data = self.datacache[[frame]]
-        try:
-            self.ui.vLayout_TF.removeWidget(self.canvTF)
-        except Exception as e:
-            logging.debug(f"can`t remove widget(s)", exc_info=e)
-            pass
-        self.canvTF = MatplotlibCanvas(self)        
-        self.ui.vLayout_TF.addWidget(self.canvTF, 10)        
-        self.canvTF.axes.cla()
-        if self.ui.comboBox_2.currentText() == 'STFT':
-            t, f, S_db = dsp.spect(df=data, print=False)
-        elif self.ui.comboBox_2.currentText() == 'WSST':
-            t, f, S_db = dsp.WSST(df=data,return_fig=False,fs=dq.fs)
-        self.canvTF.axes.set_xlabel('Time')
-        self.canvTF.axes.set_ylabel('Frequency')
-        #self.canvTF.axes.set_title('Time-Frequency - {}'.format(frame))
-        try:
-            #self.canvTF.axes.pcolormesh(t, f, S_db, shading='gouraud',  cmap='turbo')
-            self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
-                                    interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
-        except Exception as e:
-            logging.warning('warning =>> '+str(e))
-            pass
-        #self.canvTF.colorbar()
-        self.canvTF.axes.yscale('log')
-        self.canvTF.draw()
-        
-
-    def updatePlot(self, plotdata):
+            self.ui.cBox_data.addItem(item)
+        self.ui.cBox_data.setCurrentIndex(0)
+    
+    def updatePlot(self):
         plt.clf()
         try:
-            self.ui.vLayout_plot.removeWidget(self.canv)
+            self.ui.vLayout_viz.removeWidget(self.canv)
         except Exception as e:
             logging.debug('warning =>> ', exc_info=e)
             pass
         self.canv = MatplotlibCanvas(self)        
-        self.ui.vLayout_plot.addWidget(self.canv)
+        self.ui.vLayout_viz.addWidget(self.canv)
         self.canv.axes.cla()
-        self.canv.axes.set_xlabel('Time')
-        self.canv.axes.set_ylabel('Amplitude')
-
-        try:
-            self.canv.axes.plot(plotdata)
-            self.canv.axes.legend(plotdata.columns)
-            
-        except Exception as e:
-            logging.debug('Can`t plot data ==>', exc_info=e)
+        frame = self.ui.cBox_data.currentText()
+        if self.ui.cBox_method.currentText() == 'Time':
+            self.canv.axes.set_xlabel('Time')
+            self.canv.axes.set_ylabel('Amplitude')
+            try:
+                self.canv.axes.plot(self.datacache)
+                self.canv.axes.legend(self.datacache.columns)
+            except Exception as e:
+                logging.debug('Can`t plot data ==>', exc_info=e)
+        elif self.ui.cBox_method.currentText() == 'PSD':
+            self.canv.axes.set_xlabel('Frequency')
+            self.canv.axes.set_ylabel('Amplitude')
+            try:
+              f, S_db = dsp.PSD(self.datacache, fs=dq.fs)
+              self.canv.axes.plot(f, S_db)
+              self.canv.axes.legend(self.datacache.columns)
+            except Exception as e:
+                logging.warning('can`t plot PSD',exc_info=e)
+        elif self.ui.cBox_method.currentText() == 'STFT':
+            self.canv.axes.set_xlabel('Time')
+            self.canv.axes.set_ylabel('Frequency')
+            try:
+                t, f, S_db = dsp.spect(df=self.datacache[[frame]], print=False)
+                self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
+                                    interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
+            except Exception as e:
+                logging.warning('can`t plot STFT',exc_info=e)
+        elif self.ui.cBox_method.currentText() == 'WSST':
+            self.canvTF.axes.set_xlabel('Time')
+            self.canvTF.axes.set_ylabel('Frequency')
+            try:
+                t, f, S_db = dsp.WSST(df=self.datacache[[frame]],return_fig=False,fs=dq.fs)
+                self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
+                                    interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
+            except Exception as e:
+                logging.warning('can`t plot WSST',exc_info=e)
+ 
         self.canv.draw()
 
     def showmessage(self, msg):

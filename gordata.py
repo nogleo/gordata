@@ -181,11 +181,12 @@ class daq:
                     pass
                 
         logging.info('Dequeue successfull')
-        data_array = np.array(self.dt*(np.arange(len(data[addr]))), ndmin=2).T
+        DFs = {}
         for addr, val in self.devices.items():      #block translate from raw to meaningful data
             array = np.array(data[addr], ndmin=2)
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
+                    name = 'IMU_{}'.format(hex(addr))
                     params = pd.read_csv('./sensors/'+val['cal']+'.csv')
                     array = self.translate_imu(acc=array[:,3:],
                                                     gyr=array[:,:3],
@@ -195,11 +196,12 @@ class daq:
                 elif addr == 0x36 or addr==0x48:
                     scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
                     array = array*scale 
-            data_array = np.hstack((data_array,array)) 
-        logging.info('Generating DataFrame')              
-        return pd.DataFrame(data_array, columns=columns)
-
-    def save_data(self, df: pd.DataFrame):
+             
+            DFs[name] = pd.DataFrame(array,
+                       index={'t': np.arange(len(data[addr]))*self.dt},
+                       columns=val['lbl'])
+        
+    def save_data(self, DFs: dict[pd.DataFrame], session: int='unamed'):
         
         path = self.root+'/data/'
         try:
@@ -209,8 +211,8 @@ class daq:
             os.mkdir(path)
             pass
         try:
-            filename = path+'data_{:03d}.csv'.format(num)
-            df.to_csv(filename)
+            filename = path+'data_{:03d}_.csv'.format(num)
+            DFs.to_csv(filename)
             logging.info("saved data to {}".format(filename))
             return True
         except Exception as e:
@@ -225,26 +227,30 @@ class dsp:
         self.fs = 1666
         self.dt = 1/self.fs
 
-    def PSD(self, df, fs, units='unid.', fig=None, line='-', linewidth=1, S_ref=1):
+    def PSD(self, df, fs, units='unid.', fig=None, line='-', linewidth=1, S_ref=1, return_fig=True):
         f, Pxx = signal.welch(df, fs, nperseg=fs//4, noverlap=fs//8, window='hann', average='mean', scaling='density', detrend=False, axis=0)
-        if fig==None:
-            fig=plt.figure()
-        plt.subplot(211)
-        # plt.title('Sinal')
-        plt.xlabel('Tempo [s]')
-        plt.ylabel('Amplitude [{}]'.format(units))
-        plt.plot(df, line, linewidth=linewidth)
-        plt.legend(df.columns)
-        plt.grid(True, which='both')
-        plt.subplot(212)
-        # plt.title('Densidade do Espectro de Potência')
-        plt.plot(f, 20*np.log10(abs(Pxx/S_ref)))
-        plt.xlim((1,800))
-        plt.xlabel('Frequência [Hz]')
-        plt.ylabel('PSD [dB/Hz] ref= {} {}'.format(S_ref,units))
-        plt.grid(True, which='both')  
-        plt.tight_layout() 
-        return fig
+        if return_fig is False:
+            return f, 20*np.log10(abs(Pxx))
+        else:
+            if fig==None:
+                fig, ax = plt.subplots()
+                fig=plt.figure()
+            plt.subplot(211)
+            # plt.title('Sinal')
+            plt.xlabel('Tempo [s]')
+            plt.ylabel('Amplitude [{}]'.format(units))
+            plt.plot(df, line, linewidth=linewidth)
+            plt.legend(df.columns)
+            plt.grid(True, which='both')
+            plt.subplot(212)
+            # plt.title('Densidade do Espectro de Potência')
+            plt.plot(f, 20*np.log10(abs(Pxx/S_ref)))
+            plt.xlim((1,800))
+            plt.xlabel('Frequência [Hz]')
+            plt.ylabel('PSD [dB/Hz] ref= {} {}'.format(S_ref,units))
+            plt.grid(True, which='both')  
+            plt.tight_layout() 
+            return fig
 
 
     def WOLA(self, data, factor=1, NFFT=None):
