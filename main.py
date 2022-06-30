@@ -95,14 +95,14 @@ class app_gd(qtw.QMainWindow):
         except Exception as e:
             logging.warning("can`t clear comobo box", exc_info=e)
             pass
-        index=0
+        
         for address, device in dq.devices.items():
             item = qtw.QListWidgetItem('{} ---- {}'.format(address,device['cal']))
             self.ui.listWidget.addItem(item)
-            index += 1
+            
             
             logging.debug(f"Device {address} loaded")
-        self.ui.listWidget.setCurrentIndex(0)
+        self.ui.listWidget.setCurrentItem(item)
 
     def interrupt(self):
         logging.info('set dq.running to False')
