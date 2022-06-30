@@ -147,6 +147,7 @@ class daq:
 
         ii=0
         t0 = ti = tf = time.perf_counter()
+        logging.info('start pull data at {}'.format(t0))
         while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
@@ -201,21 +202,25 @@ class daq:
             DFs[name] = pd.DataFrame(array,
                        index={'t': np.arange(len(data[addr]))*self.dt},
                        columns=val['lbl'])
+        return DFs
         
-    def save_data(self, DFs: dict[pd.DataFrame], session: int='unamed'):
-        
-        path = self.root+'/data/'+self.sessionname+'/'
+    def save_data(self, DFs: dict[pd.DataFrame], session: str=None):
+        os.chdir(self.root)
+        if session is None:
+            session = self.sessionname
+        path = '{}/data/{}/'.format(self.root, session)
         try:
             num: int = os.listdir(path).__len__()
-
         except Exception as e:
             num = 0
-            logging.debug("can`t list path", exc_info=e)
-            os.mkdir(path)
+            logging.info("can`t list path", exc_info=e)
             pass
+        path = path+'data_{:04d}'.format(num)
+        os.mkdir(path)
+        os.chdir(path)
         try:
             for name, df in DFs:
-                filename = path+'data_{:03d}/{}.csv'.format(num,name)
+                filename = './{}.csv'.format(name)
                 DFs[name].to_csv(filename)
                 logging.info("saved data to {}".format(filename))
             return True

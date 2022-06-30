@@ -102,28 +102,12 @@ class app_gd(qtw.QMainWindow):
         
 
     def interrupt(self):
+        logging.info('set dq.running to False')
         dq.running = False
 
     def stop_collect(self):
         worker = Worker(self.interrupt)
         self.threadpool.start(worker)
-
-    def getFile(self):
-        """ This function will get the address of the csv file location
-            also calls a readData function 
-        """
-        os.chdir(root)
-        try:
-            os.chdir('data')
-        except:
-            pass
-
-        self.filename = qtw.QFileDialog.getOpenFileName()[0]
-        logging.debug("File : {}".format(self.filename))
-        try:
-            self.readData()
-        except Exception:
-            pass
 
     def linkSens(self):
         self.filename = qtw.QFileDialog.getOpenFileName(
@@ -133,10 +117,8 @@ class app_gd(qtw.QMainWindow):
         dq.devices[int(addr)]['cal'] = self.filename[25:-4]
         self.loadDevices()
         
-
     def load_viz(self):
         files = qtw.QFileDialog.getOpenFileNames(directory='home/pi/gordata/data')[0]
-        
         DF =  [pd.read_csv(file, index_col='t') for file in files]
         self.datacache = pd.concat(DF)
 
