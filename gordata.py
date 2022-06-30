@@ -36,7 +36,7 @@ class daq:
         self.raw: bool = False
         self.data_rate: int = 10  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range: list[int] = [1, 3]  # [16G, 2000DPS]
-        self.q = queue.Queue()
+        
         self.init_devices()
 
     def init_devices(self):
@@ -132,7 +132,8 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
 
-    def pull_data(self, durr: float=0, devices=None):
+    def pull_data(self, durr: float=0, devices=None) -> dict[pd.DataFrame]:
+        q = queue.Queue()
         logging.info('Start pulling')
         if durr == 0:
             N = inf
@@ -140,43 +141,41 @@ class daq:
             N = durr*self.fs
         if devices is None:
             devices = self.devices
-        if not self.q.empty():
-            self.q.queue.clear()        
-        
+               
+        logging.info('activate dq.running')
         self.running = True
+
         value = []
         for addr, val in devices.items():
             value.append([addr, val['reg'], val['len']])
 
         ii=0
         t0 = ti = tf = time.perf_counter()
-        logging.info('start pull data at {}'.format(t0))
-        while self.running and ii<=N:
+        while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
                 ii+=1    
                 for val in value:
                     try:
-                        self.q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
+                        q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
                     except:
-                        self.q.put(0)
+                        q.put((0,))
                         pass
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
-        return self.dequeue_data()
 
-    def dequeue_data(self, raw: bool=True) -> pd.DataFrame():
+        return self.dequeue_data(q)
+
+    def dequeue_data(self,q: queue.Queue, raw: bool=False) -> dict[pd.DataFrame]:
         logging.info('start dequeueing...')
         data = {}
-        columns = ['t'] 
-        
         for addr, val in self.devices.items():
             data[addr] = []
-            columns.extend(val['lbl'])
-        while not self.q.empty():       #block dequeueing data
+        logging.info('start looping through queue')    
+        while not q.empty():       #block dequeueing data
             for addr, val in self.devices.items():
-                qq = self.q.get()
+                qq = q.get()
                 if any(qq):
                     data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:

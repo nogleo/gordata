@@ -80,9 +80,12 @@ class app_gd(qtw.QMainWindow):
             dq.set_device(addr)
             time.sleep(dq.dt)
         dq.sessionname = self.ui.line_session.text()
-        dq.save_data(dq.pull_data(durr=float(self.ui.label_durr.text())), session=dq.sessionname)
-
+        DF = dq.pull_data(durr=float(self.ui.label_durr.text()))
+        logging.info('sucessful pulling. generated dict of data frames')
+        dq.save_data(DF, session=dq.sessionname)
+        logging.info('save data successful')
         self.ui.pButton_start.setEnabled(True)
+        logging.info('enable start bottun again')
 
     def collect(self):
         self.ui.pButton_start.setEnabled(False)
