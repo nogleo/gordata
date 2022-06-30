@@ -201,30 +201,32 @@ class daq:
                     name = 'Sensor_{}'.format(hex(addr))
                     scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
                     array = array*scale 
-             
+            logging.info('Insert {} data into dict DFs'.format(name)) 
             DFs[name] = pd.DataFrame(array,
                        index={'t': np.arange(len(data[addr]))*self.dt},
                        columns=val['lbl'])
         return DFs
         
     def save_data(self, DFs: dict[pd.DataFrame], session: str=None):
-        os.chdir(self.root)
+        logging.info('start seving data')
+        
         if session is None:
             session = self.sessionname
-        path = '{}/data/{}/'.format(self.root, session)
+        
         try:
-            num: int = os.listdir(path).__len__()
+            os.chdir('/home/gordata/data/{}'.format(session))
         except Exception as e:
-            num = 0
-            logging.info("can`t list path", exc_info=e)
+            logging.info("path", exc_info=e)
+            os.mkdir('/home/gordata/data/{}'.format(session))
             pass
-        path = path+'data_{:04d}'.format(num)
-        os.mkdir(path)
-        os.chdir(path)
+        num: int = os.listdir(path).__len__()
+        path = '/home/gordata/data/{}/data_{:03d}/'.format(session, num)
+        
+        
         try:
             for name, df in DFs:
-                filename = './{}.csv'.format(name)
-                DFs[name].to_csv(filename)
+                filename = path+'{}.csv'.format(name)
+                df.to_csv(filename)
                 logging.info("saved data to {}".format(filename))
             return True
         except Exception as e:

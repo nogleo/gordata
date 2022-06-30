@@ -80,7 +80,7 @@ class app_gd(qtw.QMainWindow):
             dq.set_device(addr)
             time.sleep(dq.dt)
         dq.sessionname = self.ui.line_session.text()
-        dq.save_data(dq.pull_data(durr=float(self.ui.label_durr.text())))
+        dq.save_data(dq.pull_data(durr=float(self.ui.label_durr.text())), session=dq.sessionname)
 
         self.ui.pButton_start.setEnabled(True)
 
