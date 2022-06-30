@@ -278,7 +278,7 @@ class app_gd(qtw.QMainWindow):
         self.calibrationdata = np.array(self.calibrationdata)
         df = pd.DataFrame(self.calibrationdata)
         df.to_csv(_path, index=False)
-        sensor['acc_p'], sensor['gyr_p'] = dq.calibrate_imu(acc=self.calibrationdata[0:6*self.NS, 3:6],
+        sensor['acc_p'], sensor['gyr_p'] = dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
                                                             gyr=self.calibrationdata[:, 0:3],
                                                             Ts=TS,
                                                             Td=TD,

@@ -125,7 +125,7 @@ class daq:
                     logging.warning("ERROR: unable to save calibration data")
                     return False
             else:
-                return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
+                return (acc_KS, acc_bias) (gyr_KS, gyr_bias)   
 
     def translate_imu(self, acc: np.array=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
