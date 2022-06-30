@@ -417,7 +417,7 @@ class dsp:
     def WSST(self, df: pd.DataFrame, fs, return_fig=True): 
         for frame in df.columns:
 
-            coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df.A_Ay.to_numpy(), fs=fs, timestamps=df.index,
+            coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df[frame], fs=fs, timestamps=df.index,
                                             freq_limits=[1, 830],
                                             voices_per_octave=32,
                                             boundary='zeros',
@@ -427,6 +427,6 @@ class dsp:
             if return_fig:
                 return self.vizspect(df.index.to_numpy(), ssqfreqs, Tx.real, frame, fscale='linear')
             else:
-                return t_wsst, f_wsst, 20*np.log10(plt.psd)
+                return t_wsst, f_wsst, 20*np.log10(psd_wsst)
         
         
