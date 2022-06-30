@@ -187,23 +187,26 @@ class daq:
         DFs = {}
         for addr, val in self.devices.items():      #block translate from raw to meaningful data
             array = np.array(data[addr], ndmin=2)
+            name = 'Sensor_{}'.format(hex(addr))
+            logging.info('inserting values of {} into dict'.format(name))
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
-                    name = 'IMU_{}'.format(hex(addr))
-                    params = pd.read_csv('./sensors/'+val['cal']+'.csv')
+                    
+                    params = pd.read_csv(self.root+'/sensors/'+val['cal']+'.csv')
                     array = self.translate_imu(acc=array[:,3:],
                                                     gyr=array[:,:3],
                                                     fs=self.fs,
                                                     acc_param=(params['acc_p']),
                                                     gyr_param=(params['gyr_p']))
                 elif addr == 0x36 or addr==0x48:
-                    name = 'Sensor_{}'.format(hex(addr))
+                   
                     scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
                     array = array*scale 
-            logging.info('Insert {} data into dict DFs'.format(name)) 
             DFs[name] = pd.DataFrame(array,
                        index={'t': np.arange(len(data[addr]))*self.dt},
                        columns=val['lbl'])
+            logging.info('Inserted {} data into dict DFs'.format(name)) 
+        
         return DFs
         
     def save_data(self, DFs: dict[pd.DataFrame], session: str=None):
@@ -213,13 +216,13 @@ class daq:
             session = self.sessionname
         
         try:
-            os.chdir('/home/gordata/data/{}'.format(session))
+            os.chdir(self.root+'/data/{}'.format(session))
         except Exception as e:
             logging.info("path", exc_info=e)
-            os.mkdir('/home/gordata/data/{}'.format(session))
+            os.mkdir(self.root+'/data/{}'.format(session))
             pass
         num: int = os.listdir(path).__len__()
-        path = '/home/gordata/data/{}/data_{:03d}/'.format(session, num)
+        path = self.root+'/data/{}/data_{:03d}/'.format(session, num)
         
         
         try:
