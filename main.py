@@ -250,7 +250,7 @@ class app_gd(qtw.QMainWindow):
                 logging.debug('collecting position  ' + str(ii+1))
                 try:
                     self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=TS,
-                                                                                 devices=device).to_numpy()
+                                                                                 devices=device)['Sensor_{}'.format(hex(addr))].to_numpy()
                 except Exception as e:
                     logging.warning('can`t pull data', exc_info=e)
             else:
