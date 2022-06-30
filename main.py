@@ -77,7 +77,7 @@ class app_gd(qtw.QMainWindow):
             dq.set_device(addr)
             time.sleep(dq.dt)
         dq.sessionname = self.ui.line_session.text()
-        dq.save_data(dq.pull_data(durr=float(self.ui.label.text())))
+        dq.save_data(dq.pull_data(durr=float(self.ui.label_durr.text())))
 
         self.ui.pButton_start.setEnabled(True)
 
@@ -211,7 +211,7 @@ class app_gd(qtw.QMainWindow):
         if 'sensors' not in os.listdir():
             os.mkdir('sensors')
         os.chdir('sensors')
-        addr = int(self.ui.comboBox.currentText()[:3])
+        addr = int(self.ui.listWidget.currentItem().text()[:3])
         device = {addr: dq.devices[addr]}
         msg, ok = qtw.QInputDialog().getText(self,
                                              'Name your IMU',
