@@ -94,9 +94,8 @@ class app_gd(qtw.QMainWindow):
             pass
         index=0
         for address, device in dq.devices.items():
-            item = qtw.QTreeWidgetItem(str(address))
-            item.addChild(qtw.QTreeWidgetItem(device['cal']))
-            self.ui.treeWidget.insertTopLevelItem(index, item)
+            item = qtw.QListWidgetItem('{} -- {}'.format(address,device['cal']))
+            self.ui.listWidget.addItem(item)
             index += 1
             
             logging.debug(f"Device {address} loaded")

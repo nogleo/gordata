@@ -271,13 +271,7 @@
         <item row="3" column="8">
          <layout class="QVBoxLayout" name="vLayout_sensors_1">
           <item>
-           <widget class="QTreeWidget" name="treeWidget">
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
-           </widget>
+           <widget class="QListWidget" name="listWidget"/>
           </item>
           <item>
            <spacer name="vSpacer_sensors_1">
