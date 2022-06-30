@@ -417,14 +417,16 @@ class dsp:
         return fig
 
     def WSST(self, df: pd.DataFrame, fs): 
-        coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df.to_numpy(), fs=fs, timestamps=df.index,
-                                        freq_limits=[1, 830],
-                                        voices_per_octave=32,
-                                        boundary='zeros',
-                                        method='ola')
-        psd_wsst = coefs_wsst.real**2 + coefs_wsst.imag**2
+        coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df.to_numpy(), fs=fs,   
+                                                   voices_per_octave=32,
+                                                   freq_limits=[1, 800],
+                                                   boundary='zeros',
+                                                   method='ola')
         
-        return t_wsst, f_wsst, 20*np.log10(psd_wsst)
+        psd_wsst = coefs_wsst.real**2 + coefs_wsst.imag**2
+        psd_wsst /= np.max(psd_wsst)
+        psd_wsst[psd_wsst==0] = 1e-8
+        return t_wsst, f_wsst[::-1], 20*np.log10(psd_wsst)
         
 
         

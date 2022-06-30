@@ -64,6 +64,9 @@ class app_gd(qtw.QMainWindow):
         logging.debug("Multithreading with maximum %d threads" %
                       self.threadpool.maxThreadCount())
         self.canv = MatplotlibCanvas(self)
+        self.ui.vLayout_viz.addWidget(self.canv)
+        self.navigation = Navi(self.canv, self.ui.tab_viz)
+        self.ui.hLayout_viz.addWidget(self.navigation)
         
         
     def initDevices(self):
@@ -118,6 +121,9 @@ class app_gd(qtw.QMainWindow):
         self.loadDevices()
         
     def load_viz(self):
+        del self.datacache
+        self.ui.cBox_method.setCurrentIndex(0)
+        
         files = qtw.QFileDialog.getOpenFileNames(directory='home/pi/gordata/data')[0]
         DF =  [pd.read_csv(file, index_col='t') for file in files]
         self.datacache = pd.concat(DF)
@@ -130,16 +136,18 @@ class app_gd(qtw.QMainWindow):
         for item in self.datacache.columns:
             self.ui.cBox_data.addItem(item)
         self.ui.cBox_data.setCurrentIndex(0)
+
     
-    def updatePlot(self):
-        
+    def updatePlot(self):   
+        plt.clf()     
         try:
-            self.ui.vLayout_viz.removeWidget(self.canv)
+            self.canv.axes.clear()      
+            #self.ui.vLayout_viz.removeWidget(self.canv)
         except Exception as e:
-            logging.debug('warning =>> ', exc_info=e)
+            logging.info('warning =>> ', exc_info=e)
             pass
-        self.canv = MatplotlibCanvas(self)        
-        self.ui.vLayout_viz.addWidget(self.canv)
+        #self.canv = MatplotlibCanvas(self)  
+        #self.ui.vLayout_viz.addWidget(self.canv)
         
         frame = self.ui.cBox_data.currentText()
         if self.ui.cBox_method.currentText() == 'Time':
@@ -171,13 +179,16 @@ class app_gd(qtw.QMainWindow):
         elif self.ui.cBox_method.currentText() == 'WSST':
             self.canv.axes.set_xlabel('Time')
             self.canv.axes.set_ylabel('Frequency')
+            plt.yscale('log')
+            
             try:
-                t, f, S_db = dsp.WSST(df=self.datacache[[frame]],fs=dq.fs)
+                t, f, S_db = dsp.WSST(df=self.datacache[frame],fs=dq.fs)
                 self.canv.axes.imshow(S_db, aspect='auto', cmap='turbo',
-                                    interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
+                                    interpolation='gaussian',
+                                    extent=[t[0], t[-1], f[0], f[-1]])
             except Exception as e:
                 logging.warning('can`t plot WSST',exc_info=e)
- 
+        plt.yscale('linear')
         self.canv.draw()
 
     def showmessage(self, msg):
