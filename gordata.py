@@ -132,7 +132,7 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
 
-    def pull_data(self, durr: float=0, devices=None) -> dict[pd.DataFrame]:
+    def pull_data(self, durr: float=0, devices=None, raw=False, rtrn_array=False) -> dict[pd.DataFrame]:
         q = queue.Queue()
         logging.info('Start pulling')
         if durr == 0:
@@ -165,9 +165,9 @@ class daq:
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
 
-        return self.dequeue_data(q)
+        return self.dequeue_data(q, raw, rtrn_array)
 
-    def dequeue_data(self,q: queue.Queue, raw: bool=False) -> dict[pd.DataFrame]:
+    def dequeue_data(self,q: queue.Queue, raw: bool=False, rtrn_array=False) -> dict[pd.DataFrame]:
         logging.info('start dequeueing...')
         data = {}
         for addr, val in self.devices.items():
@@ -188,6 +188,8 @@ class daq:
         for addr, val in self.devices.items():      #block translate from raw to meaningful data
             array = np.array(data[addr], ndmin=2)
             name = 'Sensor_{}'.format(hex(addr))
+            if rtrn_array:
+                return array
             logging.info('inserting values of {} into dict'.format(name))
             if val['cal'] is not None and not raw:
                 if addr == 0x6a or addr == 0x6b:
