@@ -282,7 +282,8 @@ class app_gd(qtw.QMainWindow):
                                                             gyr=self.calibrationdata[:, 0:3],
                                                             Ts=TS,
                                                             Td=TD,
-                                                            fs=dq.fs)
+                                                            fs=dq.fs,
+                                                            name=sensor['name'])
         sensorframe = pd.DataFrame(sensor, columns=['acc_p', 'gyr_p'], index=False)
         sensorframe.to_csv(dq.root+'/sensors/{}.csv'.format(sensor['name']))
         logging.info("Garbage collection: {}".format(gc.collect()))

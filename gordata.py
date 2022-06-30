@@ -55,8 +55,8 @@ class daq:
                                               0x11: (self.data_rate << 4 | self.data_range[1] << 2),
                                               0x12: 0x44,
                                               0x13: 1 << 1,
-                                              0x15: 0b011,
-                                              0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
+                                              0x15: 0b011}
+                                              #0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
                     self.set_device(address)
                         
                 elif address == 0x48:
