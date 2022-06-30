@@ -405,8 +405,6 @@ class dsp:
         return fig
 
     def WSST(self, df: pd.DataFrame, fs, return_fig=True): 
-        figs = []
-        results = []
         for frame in df.columns:
             Tx, _, ssqfreqs, _ = sq.ssq_cwt(df[frame].to_numpy() ,
                                                 wavelet='gmw',
@@ -414,13 +412,14 @@ class dsp:
                                                 nv=32,
                                                 ssq_freqs='linear',
                                                 maprange='peak',
-                                                padtype='reflect')
+                                                padtype='reflect',
+                                                scales='linear')
 
             
-            #psd_wsst = Tx.real**2 + Tx.imag**2
+            Tx[Tx==0] = 10**(-20)
             if return_fig:
                 return self.vizspect(df.index.to_numpy(), ssqfreqs, Tx.real, frame, fscale='linear')
             else:
-                return df.index.to_numpy(), ssqfreqs, Tx.real
+                return df.index.to_numpy(), ssqfreqs, 20*np.log10(abs(Tx))
         
         

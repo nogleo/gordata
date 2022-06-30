@@ -137,11 +137,11 @@ class app_gd(qtw.QMainWindow):
         
 
     def load_viz(self):
-        self.datacache = pd.DataFrame()
-        files = qtw.QFileDialog.getOpenFileName(directory='home/pi/gordata/data')
-        logging.debug("File : {}".format(files))
-        for file in files:
-            self.datacache.append(pd.read_csv(file, index_col='t'))[0]
+        files = qtw.QFileDialog.getOpenFileNames(directory='home/pi/gordata/data')[0]
+        
+        DF =  [pd.read_csv(file, index_col='t') for file in files]
+        self.datacache = pd.concat(DF)
+
         try:
             self.ui.cBox_data.clear()
         except Exception as e:
@@ -152,7 +152,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.cBox_data.setCurrentIndex(0)
     
     def updatePlot(self):
-        plt.clf()
+        
         try:
             self.ui.vLayout_viz.removeWidget(self.canv)
         except Exception as e:
@@ -160,7 +160,7 @@ class app_gd(qtw.QMainWindow):
             pass
         self.canv = MatplotlibCanvas(self)        
         self.ui.vLayout_viz.addWidget(self.canv)
-        self.canv.axes.cla()
+        
         frame = self.ui.cBox_data.currentText()
         if self.ui.cBox_method.currentText() == 'Time':
             self.canv.axes.set_xlabel('Time')
@@ -174,7 +174,7 @@ class app_gd(qtw.QMainWindow):
             self.canv.axes.set_xlabel('Frequency')
             self.canv.axes.set_ylabel('Amplitude')
             try:
-              f, S_db = dsp.PSD(self.datacache, fs=dq.fs)
+              f, S_db = dsp.PSD(self.datacache, fs=dq.fs, return_fig=False)
               self.canv.axes.plot(f, S_db)
               self.canv.axes.legend(self.datacache.columns)
             except Exception as e:
@@ -184,16 +184,16 @@ class app_gd(qtw.QMainWindow):
             self.canv.axes.set_ylabel('Frequency')
             try:
                 t, f, S_db = dsp.spect(df=self.datacache[[frame]], print=False)
-                self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
+                self.canv.axes.imshow(S_db, aspect='auto', cmap='turbo',
                                     interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
             except Exception as e:
                 logging.warning('can`t plot STFT',exc_info=e)
         elif self.ui.cBox_method.currentText() == 'WSST':
-            self.canvTF.axes.set_xlabel('Time')
-            self.canvTF.axes.set_ylabel('Frequency')
+            self.canv.axes.set_xlabel('Time')
+            self.canv.axes.set_ylabel('Frequency')
             try:
                 t, f, S_db = dsp.WSST(df=self.datacache[[frame]],return_fig=False,fs=dq.fs)
-                self.canvTF.axes.imshow(S_db, aspect='auto', cmap='turbo',
+                self.canv.axes.imshow(S_db, aspect='auto', cmap='turbo',
                                     interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
             except Exception as e:
                 logging.warning('can`t plot WSST',exc_info=e)
