@@ -413,7 +413,7 @@ class dsp:
             Tx, _, ssqfreqs, _ = sq.ssq_cwt(df[frame].to_numpy() ,
                                                 wavelet='gmw',
                                                 fs=fs,
-                                                nv=32,
+                                                nv=16,
                                                 ssq_freqs='linear',
                                                 maprange='peak',
                                                 padtype='reflect',
