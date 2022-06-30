@@ -194,6 +194,7 @@ class daq:
                                                     acc_param=(params['acc_p']),
                                                     gyr_param=(params['gyr_p']))
                 elif addr == 0x36 or addr==0x48:
+                    name = 'Sensor_{}'.format(hex(addr))
                     scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
                     array = array*scale 
              
@@ -203,20 +204,23 @@ class daq:
         
     def save_data(self, DFs: dict[pd.DataFrame], session: int='unamed'):
         
-        path = self.root+'/data/'
+        path = self.root+'/data/'+self.sessionname+'/'
         try:
             num: int = os.listdir(path).__len__()
+
         except Exception as e:
+            num = 0
             logging.debug("can`t list path", exc_info=e)
             os.mkdir(path)
             pass
         try:
-            filename = path+'data_{:03d}_.csv'.format(num)
-            DFs.to_csv(filename)
-            logging.info("saved data to {}".format(filename))
+            for name, df in DFs:
+                filename = path+'data_{:03d}/{}.csv'.format(num,name)
+                DFs[name].to_csv(filename)
+                logging.info("saved data to {}".format(filename))
             return True
         except Exception as e:
-            logging.error('Could not savedata_{:03d}.csv'.format(num), exc_info=e)
+            logging.error('Could not save data_{:03d}'.format(num), exc_info=e)
             return False
 
 

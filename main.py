@@ -76,7 +76,7 @@ class app_gd(qtw.QMainWindow):
         for addr in dq.devices.keys():
             dq.set_device(addr)
             time.sleep(dq.dt)
-
+        dq.sessionname = self.ui.line_session.text()
         dq.save_data(dq.pull_data(durr=float(self.ui.label.text())))
 
         self.ui.pButton_start.setEnabled(True)
@@ -94,7 +94,7 @@ class app_gd(qtw.QMainWindow):
             pass
         index=0
         for address, device in dq.devices.items():
-            item = qtw.QListWidgetItem('{} -- {}'.format(address,device['cal']))
+            item = qtw.QListWidgetItem('{} ---- {}'.format(address,device['cal']))
             self.ui.listWidget.addItem(item)
             index += 1
             
@@ -105,7 +105,6 @@ class app_gd(qtw.QMainWindow):
         dq.running = False
 
     def stop_collect(self):
-
         worker = Worker(self.interrupt)
         self.threadpool.start(worker)
 
