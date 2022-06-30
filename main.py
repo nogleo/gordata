@@ -88,7 +88,7 @@ class app_gd(qtw.QMainWindow):
 
     def loadDevices(self):
         try:
-            self.ui.treeWidget.clear()
+            self.ui.listWidget.clear()
         except Exception as e:
             logging.warning("can`t clear comobo box", exc_info=e)
             pass
@@ -131,7 +131,7 @@ class app_gd(qtw.QMainWindow):
             directory='home/pi/gordata/sensors')[0]
         logging.info("File :", self.filename)
         addr = self.ui.listWidget.currentItem().text()[:3]
-        dq.devices[int(addr)][-1] = self.filename[25:-4]
+        dq.devices[int(addr)]['cal'] = self.filename[25:-4]
         self.loadDevices()
         
 
