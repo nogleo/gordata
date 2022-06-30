@@ -130,7 +130,7 @@ class app_gd(qtw.QMainWindow):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/sensors')[0]
         logging.info("File :", self.filename)
-        addr = self.ui.listWidget.currentItem.text()[:3]
+        addr = self.ui.listWidget.currentItem().text()[:3]
         dq.devices[int(addr)][-1] = self.filename[25:-4]
         self.loadDevices()
         
