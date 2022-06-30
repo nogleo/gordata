@@ -48,7 +48,7 @@
        </sizepolicy>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tab_daq">
        <attribute name="title">
@@ -74,7 +74,7 @@
          </widget>
         </item>
         <item row="1" column="5">
-         <widget class="QLabel" name="label">
+         <widget class="QLabel" name="label_durr">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
             <horstretch>1</horstretch>
@@ -538,7 +538,7 @@
   <connection>
    <sender>horizontalSlider</sender>
    <signal>valueChanged(int)</signal>
-   <receiver>label</receiver>
+   <receiver>label_durr</receiver>
    <slot>setNum(int)</slot>
    <hints>
     <hint type="sourcelabel">
