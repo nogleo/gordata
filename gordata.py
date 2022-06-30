@@ -15,6 +15,7 @@ from matplotlib import pyplot as plt
 import logging
 from scipy.fftpack import fft, ifft, fftfreq, fftshift
 import ssqueezepy as sq
+import ghostipy as gp
 class daq:
     def __init__(self):
         self.__name__ = "daq"
@@ -415,20 +416,17 @@ class dsp:
 
     def WSST(self, df: pd.DataFrame, fs, return_fig=True): 
         for frame in df.columns:
-            Tx, _, ssqfreqs, _ = sq.ssq_cwt(df[frame].to_numpy() ,
-                                                wavelet='gmw',
-                                                fs=fs,
-                                                nv=16,
-                                                ssq_freqs='linear',
-                                                maprange='peak',
-                                                padtype='reflect',
-                                                scales='linear')
 
+            coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df.A_Ay.to_numpy(), fs=fs, timestamps=df.index,
+                                            freq_limits=[1, 830],
+                                            voices_per_octave=32,
+                                            boundary='zeros',
+                                            method='ola')
+            psd_wsst = coefs_wsst.real**2 + coefs_wsst.imag**2
             
-            Tx[Tx==0] = 10**(-20)
             if return_fig:
                 return self.vizspect(df.index.to_numpy(), ssqfreqs, Tx.real, frame, fscale='linear')
             else:
-                return df.index.to_numpy(), ssqfreqs, 20*np.log10(abs(Tx))
+                return t_wsst, f_wsst, 20*np.log10(plt.psd)
         
         
