@@ -1,5 +1,4 @@
 from cmath import inf
-from optparse import Values
 import os
 import queue
 from struct import unpack
@@ -14,7 +13,7 @@ import ahrs
 from matplotlib import pyplot as plt
 import logging
 from scipy.fftpack import fft, ifft, fftfreq, fftshift
-import ssqueezepy as sq
+
 import ghostipy as gp
 class daq:
     def __init__(self):
@@ -134,13 +133,16 @@ class daq:
         return np.hstack((gyr_t, acc_t))
 
     def pull_data(self, durr: float=0, devices=None):
+        logging.info('Start pulling')
         if durr == 0:
-            durr = float('inf')
+            N = inf
+        else:
+            N = durr*self.fs
         if devices is None:
             devices = self.devices
         if not self.q.empty():
             self.q.queue.clear()        
-        N = durr*self.fs
+        
         self.running = True
         value = []
         for addr, val in devices.items():
@@ -149,7 +151,7 @@ class daq:
         ii=0
         t0 = ti = tf = time.perf_counter()
         logging.info('start pull data at {}'.format(t0))
-        while self.running and ii<N:
+        while self.running and ii<=N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
                 ti = time.perf_counter()
@@ -165,13 +167,13 @@ class daq:
         return self.dequeue_data()
 
     def dequeue_data(self, raw: bool=True) -> pd.DataFrame():
+        logging.info('start dequeueing...')
         data = {}
         columns = ['t'] 
         
         for addr, val in self.devices.items():
             data[addr] = []
             columns.extend(val['lbl'])
-        logging.info('start dequeueing...')
         while not self.q.empty():       #block dequeueing data
             for addr, val in self.devices.items():
                 qq = self.q.get()
@@ -414,19 +416,16 @@ class dsp:
         ax.set_ylabel('Frequency [Hz]')
         return fig
 
-    def WSST(self, df: pd.DataFrame, fs, return_fig=True): 
-        for frame in df.columns:
+    def WSST(self, df: pd.DataFrame, fs): 
+        coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df.to_numpy(), fs=fs, timestamps=df.index,
+                                        freq_limits=[1, 830],
+                                        voices_per_octave=32,
+                                        boundary='zeros',
+                                        method='ola')
+        psd_wsst = coefs_wsst.real**2 + coefs_wsst.imag**2
+        
+        return t_wsst, f_wsst, 20*np.log10(psd_wsst)
+        
 
-            coefs_wsst, _, f_wsst, t_wsst, _ = gp.wsst(df[frame], fs=fs, timestamps=df.index,
-                                            freq_limits=[1, 830],
-                                            voices_per_octave=32,
-                                            boundary='zeros',
-                                            method='ola')
-            psd_wsst = coefs_wsst.real**2 + coefs_wsst.imag**2
-            
-            if return_fig:
-                return self.vizspect(df.index.to_numpy(), ssqfreqs, Tx.real, frame, fscale='linear')
-            else:
-                return t_wsst, f_wsst, 20*np.log10(psd_wsst)
         
         

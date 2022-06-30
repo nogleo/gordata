@@ -172,7 +172,7 @@ class app_gd(qtw.QMainWindow):
             self.canv.axes.set_xlabel('Time')
             self.canv.axes.set_ylabel('Frequency')
             try:
-                t, f, S_db = dsp.WSST(df=self.datacache[[frame]],return_fig=False,fs=dq.fs)
+                t, f, S_db = dsp.WSST(df=self.datacache[[frame]],fs=dq.fs)
                 self.canv.axes.imshow(S_db, aspect='auto', cmap='turbo',
                                     interpolation='gaussian', extent=[t[0], t[-1], f[0], f[-1]])
             except Exception as e:
