@@ -31,7 +31,7 @@ class daq:
         self.session: str = None
         self.devices: dict = {}
         self.settings: dict = {}
-        self.fs: float = 1666  # sampling frequency
+        self.fs: float = 1667  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
@@ -168,10 +168,10 @@ class daq:
         t0 = ti = tf = time.perf_counter()
         while self.running and ii<N:
             tf = time.perf_counter()
+            logging.info(str(ii))    
             if tf-ti>=self.dt:
                 ti = tf
                 ii+=1
-                logging.info(str(ii))    
                 for val in value:
                     try:
                         q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     

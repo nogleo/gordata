@@ -82,7 +82,7 @@ class app_gd(qtw.QMainWindow):
         dq.session = self.ui.line_session.text()
         res = dq.pull_data(durr=self.ui.label_durr.text())
         logging.info('pull data {}'.format(res))
-        
+        self.ui.pButton_start.setEnabled(True)
 
     def collect(self):
         self.ui.pButton_start.setEnabled(False)
