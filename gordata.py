@@ -147,7 +147,7 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
 
-    def pull_data(self, durr: float=0, devices=None, raw=False, rtrn_array=False) -> dict[pd.DataFrame]:
+    def pull_data(self, durr: float=0.0, devices=None, raw=False, rtrn_array=False):
         q = queue.Queue()
         logging.info('Start pulling')
         if durr == 0:
@@ -167,8 +167,7 @@ class daq:
         ii=0
         t0 = ti = tf = time.perf_counter()
         while self.running and ii<N:
-            tf = time.perf_counter()
-            logging.info(str(ii))    
+            tf = time.perf_counter()               
             if tf-ti>=self.dt:
                 ti = tf
                 ii+=1
