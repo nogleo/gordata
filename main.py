@@ -268,8 +268,10 @@ class app_gd(qtw.QMainWindow):
                 logging.info('cancelled')
                 return
             ii += 1
-        df = pd.DataFrame(self.calibrationdata,columns=['Gx','Gy','Gz','Ax','Ay','Az'], index={'t':np.arange(len(self.calibrationdata))*dq.dt})
-        df.to_csv(_path)
+        pd.DataFrame(self.calibrationdata,
+                     columns=['Gx','Gy','Gz','Ax','Ay','Az'],
+                     index={'t':np.arange(len(self.calibrationdata)).reshape((-1,1))*dq.dt}).to_csv(_path)
+                     
         acc_p, gyr_p = dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
                                         gyr=self.calibrationdata[:, 0:3],
                                         Ts=TS, Td=TD, fs=dq.fs, name=_name)
