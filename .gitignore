@@ -10,6 +10,8 @@ __pycache__/
 data/
 *.csv
 
+processing/
+
 # Distribution / packaging
 .Python
 build/

@@ -34,7 +34,7 @@ class daq:
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
-        self.data_rate: int = 10  # 8=1666Hz 9=3330Hz 10=6660Hz
+        self.data_rate: int = 9  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range: list[int] = [1, 3]  # [16G, 2000DPS]
         
         self.init_devices()
@@ -55,8 +55,8 @@ class daq:
                                               0x11: (self.data_rate << 4 | self.data_range[1] << 2),
                                               0x12: 0x44,
                                               0x13: 1 << 1,
-                                              0x15: 0b011}
-                                              #0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
+                                              0x15: 0b011,
+                                              0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
                     self.set_device(address)
                         
                 elif address == 0x48:
