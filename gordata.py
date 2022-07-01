@@ -187,7 +187,11 @@ class daq:
         array_out = t
         cols = ['t']
         for addr in deq_data:
-            array_out = np.hstack((array_out, self.translate(deq_data[addr], addr)))
+            if devices[addr]['cal'] is not None:
+                array_out = np.hstack((array_out, self.translate(deq_data[addr], addr)))
+            else:
+                array_out = np.hstack((array_out, deq_data[addr]))
+
             cols.append(devices[addr]['lbl'])
         if rtrn_array:
             return array_out[:,1:]
