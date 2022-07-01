@@ -194,8 +194,20 @@ class daq:
         if rtrn_array:
             return array_out[:,1:]
         logging.info('returning DataFrame')
-        return pd.DataFrame(array_out, columns=cols)        
-        
+        self.save_data(pd.DataFrame(array_out, columns=cols))
+
+    def save_data(self, df: pd.DataFrame):
+        path = self.root+'/data/'+self.session
+        logging.info('Try and save data into path: {}'.format(path))
+        try:
+            os.chdir(path)
+        except Exception as e:
+            logging.warning(exc_info=e)
+            os.mkdir(path)
+        n = os.listdir(path).__len__()
+        df.to_csv(path+'data_{}.csv'.format(n))
+
+
     def translate(self, data, addr):        
         if addr == 0x6a or addr == 0x6b:
             params = pd.read_csv(self.root+'/sensors/'+self.devices[addr]['cal']+'.csv')

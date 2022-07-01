@@ -75,20 +75,15 @@ class app_gd(qtw.QMainWindow):
 
     def pull(self):
         logging.info('main pull')
-        res = dq.pull_data(durr=float(self.ui.label_durr.text()))        
+        dq.pull_data(durr=float(self.ui.label_durr.text()))        
         logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)
-        path = dq.root+'/data/'+self.ui.line_session.text()
-        try:
-            os.chdir(path)
-        except Exception as e:
-            logging.warning(exc_info=e)
-            os.mkdir(path)
-        n = os.listdir(path).__len__()
-        res.to_csv(path+'data_{}.csv'.format(n))
+        
+        
 
     def collect(self):
         logging.info('Time to collect: '+self.ui.label_durr.text())
+        dq.session = self.ui.line_session.text()
         self.ui.pButton_start.setEnabled(False)
         worker = Worker(self.pull)
         self.threadpool.start(worker)
