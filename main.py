@@ -4,7 +4,6 @@ import pandas as pd
 import numpy as np
 from PyQt5 import QtCore as qtc
 from PyQt5 import QtWidgets as qtw
-from PyQt5 import QtGui as qui
 import matplotlib
 matplotlib.use('Qt5Agg')
 import matplotlib.pyplot as plt
@@ -13,8 +12,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 import gordata as gd
 from gui import Ui_MainWindow
 import os
-import time
-import pickle
+
 root = os.getcwd()
 
 class MatplotlibCanvas(FigureCanvasQTAgg):
@@ -76,6 +74,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.pButton_calib.setEnabled(True)
 
     def pull(self):
+        logging.info('main pull')
         res = dq.pull_data(durr=float(self.ui.label_durr.text()))        
         logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)

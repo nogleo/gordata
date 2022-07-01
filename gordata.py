@@ -182,25 +182,20 @@ class daq:
         deq_data = self.dequeue_data(q)
         logging.info('data dequeued')
         t = self.dt*np.arange(ii).reshape((-1,1))
-
-       
         array_out = t
         cols = ['t']
+        logging.info('translate steps')
         for addr in deq_data:
             if devices[addr]['cal'] is not None:
                 array_out = np.hstack((array_out, self.translate(deq_data[addr], addr)))
             else:
                 array_out = np.hstack((array_out, deq_data[addr]))
-
             cols.append(devices[addr]['lbl'])
         if rtrn_array:
             return array_out[:,1:]
-        else:
-            return pd.DataFrame(array_out, columns=cols)        
+        logging.info('returning DataFrame')
+        return pd.DataFrame(array_out, columns=cols)        
         
-      
-        
-            
     def translate(self, data, addr):        
         if addr == 0x6a or addr == 0x6b:
             params = pd.read_csv(self.root+'/sensors/'+self.devices[addr]['cal']+'.csv')
@@ -214,7 +209,6 @@ class daq:
             data = data*scale.values
         return data
         
-
     def dequeue_data(self,q: queue.Queue) -> dict:
         logging.info('start dequeueing...')
         data = {}
