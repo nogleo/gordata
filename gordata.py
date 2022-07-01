@@ -181,20 +181,19 @@ class daq:
         logging.info('data dequeued')
         t = self.dt*np.arange(ii).reshape((-1,1))
         array_out = t
-        cols = ['t']
-        logging.info('translate steps')
-        for addr in deq_data:
-            if devices[addr]['cal'] is not None:
-                array_out = np.hstack((array_out, self.translate(deq_data[addr], addr)))
-            else:
-                array_out = np.hstack((array_out, deq_data[addr]))
-            cols.append(devices[addr]['lbl'])
+        
         if rtrn_array:
+            logging.info('returning array')
+            for addr in deq_data:
+                array_out = np.hstack((array_out, deq_data[addr]))
             return array_out[:,1:]
-        logging.info('returning DataFrame')
-        df= pd.DataFrame(array_out, columns=cols)
-        logging.info('calling save_data')
-        self.save_data(df)
+        
+        for addr in deq_data:
+            logging.info('translate steps')
+            if devices[addr]['cal'] is not None:
+                deq_data = self.translate(deq_data[addr], addr)
+            self.save_data(pd.DataFrame(deq_data[addr], columns=devices[addr]['lbl'], index={'t': t}))
+            
 
     def save_data(self, df: pd.DataFrame):
         path = self.root+'/data/'+self.session
