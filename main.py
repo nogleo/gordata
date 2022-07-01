@@ -75,7 +75,7 @@ class app_gd(qtw.QMainWindow):
 
     def pull(self):
         logging.info('main pull')
-        dq.pull_data(durr=float(self.ui.label_durr.text()))        
+        dq.save_data(dq.pull_data(durr=float(self.ui.label_durr.text())))      
         logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)
         

@@ -194,7 +194,7 @@ class daq:
         if rtrn_array:
             return array_out[:,1:]
         logging.info('returning DataFrame')
-        self.save_data(pd.DataFrame(array_out, columns=cols))
+        return pd.DataFrame(array_out, columns=cols)
 
     def save_data(self, df: pd.DataFrame):
         path = self.root+'/data/'+self.session
