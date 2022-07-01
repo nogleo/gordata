@@ -89,11 +89,7 @@ class app_gd(qtw.QMainWindow):
         res.to_csv(path+'data_{}.csv'.format(n))
 
     def collect(self):
-        try:
-            os.chdir(dq.root+'/data/'+self.ui.line_session.text())
-        except Exception as e:
-            logging.warning('dir non existent', exc_info=e)
-            os.mkdir(dq.root+'/data/'+self.ui.line_session.text())
+        logging.info('Time to collect: '+self.ui.label_durr.text())
         self.ui.pButton_start.setEnabled(False)
         worker = Worker(self.pull)
         self.threadpool.start(worker)
