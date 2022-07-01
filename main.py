@@ -243,22 +243,21 @@ class app_gd(qtw.QMainWindow):
             return
 
         self.calibrationdata = np.zeros((6*self.NS+3*self.ND, 6))
-        t = dq.dt*np.arange(6*self.NS+3*self.ND).reshape((-1,1))
+        
         ii = 0
-        i = 0
+        
         while ii < 6:
             ok = self.showmessage(
                 'Move your IMU to the '+str(ii+1)+' position')
             if ok:
                 logging.debug('collecting position  ' + str(ii+1))
                 try:
-                    data = dq.pull_data(durr=TS, devices=device, raw=True, rtrn_array=True)
-                    self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = data[:,1:]
+                    self.calibrationdata[ii*self.NS:(ii+1)*self.NS,:] = dq.pull_data(durr=TS, devices=device, rtrn_array=True)
                 except Exception as e:
                     logging.warning('can`t pull data', exc_info=e)
             else:
                 logging.debug('cancelled')
-                return
+                return False
             ii += 1
 
 
@@ -267,11 +266,11 @@ class app_gd(qtw.QMainWindow):
             ok = self.showmessage('Rotate Cube Around Axis '+str(ii+1))
             if ok:
                 logging.info('collecting rotation  ' + str(ii+1))
-                data = dq.pull_data(durr=TD, devices=device, raw=True, rtrn_array=True)
-                self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = data[:,1:]
+                
+                self.calibrationdata[6*self.NS+ii*self.ND:6*self.NS+(ii+1)*self.ND] = dq.pull_data(durr=TD, devices=device, rtrn_array=True)
             else:
                 logging.info('cancelled')
-                return
+                return False
             ii += 1
         pd.DataFrame(self.calibrationdata,
                      columns=['Gx','Gy','Gz','Ax','Ay','Az']).to_csv(_path)
