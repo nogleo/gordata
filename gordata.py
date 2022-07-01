@@ -157,13 +157,13 @@ class daq:
         if devices is None:
             devices = self.devices
                
-        logging.info('activate dq.running')
-        self.running = True
 
         value = []
         for addr, val in devices.items():
             value.append([addr, val['reg'], val['len']])
 
+        logging.info('activate dq.running')
+        self.running = True
         ii=0
         t0 = ti = tf = time.perf_counter()
         while self.running and ii<N:
@@ -177,6 +177,7 @@ class daq:
                         q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
                     except:
                         q.put((0,))
+                        pass
                         
         
         t1 = time.perf_counter()
