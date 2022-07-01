@@ -31,7 +31,7 @@ class daq:
         self.session: str = None
         self.devices: dict = {}
         self.settings: dict = {}
-        self.fs: float = 1667  # sampling frequency
+        self.fs: float = 1666  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
@@ -62,12 +62,12 @@ class daq:
                                               0x0C:0b000000000,
                                               0x0D:0b000000000,
                                               0x0E:0b000000000,
-                                              0x10:0b000000000 | (self.data_rate << 4 | self.data_range[0] << 2),
+                                              0x10:0b000000000 | (self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1),
                                               0x11:0b000000000 | (self.data_rate << 4 | self.data_range[1] << 2),
                                               0x12:0b000000100 | (1<<7),
-                                              0x13:0b000000000,
+                                              0x13:0b000000000 | (1<<1),
                                               0x14:0b000000000,
-                                              0x15:0b000000000,
+                                              0x15:0b000000000 | 0b011,
                                               0x16:0b000000000,
                                               0x17:0b000000000,
                                               0x18:0b011100000,
@@ -134,13 +134,12 @@ class daq:
             gyr_KS = gyr_ref@np.linalg.inv(gyr_rot)
             if name is not None:
                 try:
-                    pd.DataFrame([acc_KS, acc_bias, gyr_KS, gyr_bias]).to_csv('./sensors/'+name+'.csv')
-                    return True
+                    pd.DataFrame({'acc_p':[acc_KS, acc_bias], 'gyr_p': [gyr_KS, gyr_bias]}).to_csv(self.root+'/sensors/_'+name+'.csv')
+                    
                 except:
                     logging.warning("ERROR: unable to save calibration data")
-                    return False
-            else:
-                return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
+                    
+            return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
 
     def translate_imu(self, acc: np.array=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
