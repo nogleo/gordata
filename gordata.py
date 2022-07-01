@@ -169,9 +169,9 @@ class daq:
         while self.running and ii<N:
             tf = time.perf_counter()
             if tf-ti>=self.dt:
-                ti = time.perf_counter()
+                ti = tf
                 ii+=1
-                logging.info(ii)    
+                logging.info(str(ii))    
                 for val in value:
                     try:
                         q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
