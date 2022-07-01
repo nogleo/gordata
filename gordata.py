@@ -52,12 +52,26 @@ class daq:
                                              'fmt': '<hhhhhh', 
                                              'lbl': ['Gx_'+num, 'Gy_'+num, 'Gz_'+num, 'Ax_'+num, 'Ay_'+num, 'Az_'+num],
                                              'cal': None}
-                    self.settings[address] = {0x10:(self.data_rate << 4 | self.data_range[0] << 2 | 1 << 1),
-                                              0x11: (self.data_rate << 4 | self.data_range[1] << 2),
-                                              0x12: 0x44,
-                                              0x13: 1 << 1,
-                                              0x15: 0b011,
-                                              0X17: 0x44}  # [0x44 is hardcoded acording to LSM6DSO datasheet](0b000 << 5
+                    self.settings[address] = {0x01:0b000000000,
+                                              0x02:0b000111111,
+                                              0x07:0b000000000,
+                                              0x08:0b000000000,
+                                              0x09:0b000000000,
+                                              0x0A:0b000000000,
+                                              0x0B:0b000000000,
+                                              0x0C:0b000000000,
+                                              0x0D:0b000000000,
+                                              0x0E:0b000000000,
+                                              0x10:0b000000000 | (self.data_rate << 4 | self.data_range[0] << 2),
+                                              0x11:0b000000000 | (self.data_rate << 4 | self.data_range[1] << 2),
+                                              0x12:0b000000100 | (1<<7),
+                                              0x13:0b000000000,
+                                              0x14:0b000000000,
+                                              0x15:0b000000000,
+                                              0x16:0b000000000,
+                                              0x17:0b000000000,
+                                              0x18:0b011100000,
+                                              0x19:0b000000000}
                     self.set_device(address)
                         
                 elif address == 0x48:
