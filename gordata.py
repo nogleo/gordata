@@ -162,77 +162,12 @@ class daq:
                         q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
                     except:
                         q.put((0,))
-                        pass
+                        
         
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
 
-        deq_data = self.dequeue_data(q)
-        t = np.array(np.arange(ii)*self.dt, ndmin=2).T
-
-        if rtrn_array:
-            array_out = t
-            for addr, val in deq_data:
-                array_out = np.hstack((array_out, val))
-            return array_out        
-        
-        else:
-            path = '{}/data/{}'
-            try:
-                num: int = os.listdir(path).__len__()
-            except Exception as e:
-                logging.info(exc_info=e)
-                num = 0
-                os.mkdir(path)
-
-            for addr, val in deq_data:
-                if devices[addr]['cal'] is not None and not raw:
-                    if addr == 0x6a or addr == 0x6b:
-                        params = pd.read_csv(self.root+'/sensors/'+devices[addr]['cal']+'.csv')
-                        val = self.translate_imu(acc=val[:,3:],
-                                                 gyr=val[:,:3],
-                                                 fs=self.fs,
-                                                 acc_param=(params['acc_p']),
-                                                 gyr_param=(params['gyr_p']))
-                elif addr == 0x36 or addr==0x48:
-                   
-                    scale = pd.read_csv('./sensors/'+val['cal']+'.csv', header=None)
-                    val = val*scale.values
-
-                df = pd.DataFrame(val, index={'t':t}, columns=devices[addr]['lbl'])
-                df.to_csv('{}/data_{}/sensor_{}.csv',format(path, num, addr))
-            return True 
-
-
-
-                
-        logging.info('Dequeue successfull')
-        DFs = {}
-        for addr, val in self.devices.items():      #block translate from raw to meaningful data
-            val = np.array(data[addr], ndmin=2)
-            name = 'Sensor_{}'.format(hex(addr))
-            if rtrn_array:
-                return val
-            logging.info('inserting values of {} into dict'.format(name))
-            if val['cal'] is not None and not raw:
-                if addr == 0x6a or addr == 0x6b:
-                    
-                    params = pd.read_csv(self.root+'/sensors/'+val['cal']+'.csv')
-                    val = self.translate_imu(acc=val[:,3:],
-                                                    gyr=val[:,:3],
-                                                    fs=self.fs,
-                                                    acc_param=(params['acc_p']),
-                                                    gyr_param=(params['gyr_p']))
-                elif addr == 0x36 or addr==0x48:
-                   
-                    scale = pd.read_csv('./sensors/'+val['cal']+'.csv')
-                    val = val*scale 
-            DFs[name] = pd.DataFrame(val,
-                       index={'t': np.arange(len(data[addr]))*self.dt},
-                       columns=val['lbl'])
-            logging.info('Inserted {} data into dict DFs'.format(name)) 
-
-
+        return q
 
         
 
@@ -250,37 +185,8 @@ class daq:
                 else:
                     logging.info('dequeue data error, atribute NaN')
                     data[addr].append((np.NaN,)*(val['len']//2))
-                    pass
+                    
         return data      
-       
-        
-    def save_data(self, DFs: dict[pd.DataFrame], session: str=None):
-        logging.info('start seving data')
-        
-        if session is None:
-            session = self.session
-        
-        try:
-            os.chdir(self.root+'/data/{}'.format(session))
-        except Exception as e:
-            logging.info("path", exc_info=e)
-            os.mkdir(self.root+'/data/{}'.format(session))
-            pass
-        num: int = os.listdir(path).__len__()
-        path = self.root+'/data/{}/data_{:03d}/'.format(session, num)
-        
-        
-        try:
-            for name, df in DFs:
-                filename = path+'{}.csv'.format(name)
-                df.to_csv(filename)
-                logging.info("saved data to {}".format(filename))
-            return True
-        except Exception as e:
-            logging.error('Could not save data_{:03d}'.format(num), exc_info=e)
-            return False
-
-
 class dsp:
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
