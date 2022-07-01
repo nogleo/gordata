@@ -16,6 +16,7 @@ import logging
 from scipy.fftpack import fft, ifft, fftfreq, fftshift
 
 import ghostipy as gp
+from sympy import reshape
 class daq:
     def __init__(self):
         self.__name__ = "daq"
@@ -146,7 +147,7 @@ class daq:
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
 
-    def pull_data(self, durr: float=0.0, devices=None, raw=False, rtrn_array=False):
+    def pull_data(self, durr: float=0.0, devices=None, rtrn_array=False):
         q = queue.Queue()
         logging.info('Start pulling')
         if durr == 0:
@@ -180,41 +181,34 @@ class daq:
 
         deq_data = self.dequeue_data(q)
         logging.info('data dequeued')
-        t = np.array(np.arange(ii)*self.dt, ndmin=2).T
+        t = self.dt*np.arange(ii).reshape((-1,1))
 
+       
+        array_out = t
+        cols = ['t']
+        for addr in deq_data:
+            array_out = np.hstack((array_out, self.translate(deq_data[addr], addr)))
+            cols.append(devices[addr]['lbl'])
         if rtrn_array:
-            array_out = t
-            for addr in deq_data:
-                array_out = np.hstack((array_out, deq_data[addr]))
-
-            return array_out        
-        
+            return array_out[:,1:]
         else:
-            path = '{}/data/{}'
-            try:
-                num: int = os.listdir(path).__len__()
-            except Exception as e:
-                logging.info(exc_info=e)
-                num = 0
-                os.mkdir(path)
-
-            for addr in deq_data:
-                if devices[addr]['cal'] is not None and not raw:
-                    if addr == 0x6a or addr == 0x6b:
-                        params = pd.read_csv(self.root+'/sensors/'+devices[addr]['cal']+'.csv')
-                        deq_data[addr] = self.translate_imu(acc=deq_data[addr][:,3:],
-                                                            gyr=deq_data[addr][:,:3],
-                                                            fs=self.fs,
-                                                            acc_param=(params['acc_p']),
-                                                            gyr_param=(params['gyr_p']))
-                elif addr == 0x36 or addr==0x48:                   
-                    scale = pd.read_csv('./sensors/'+val['cal']+'.csv', header=None)
-                    val = val*scale.values
-
-                df = pd.DataFrame(deq_data[addr], index={'t':t}, columns=devices[addr]['lbl'])
-                df.to_csv('{}/data_{}/sensor_{}.csv',format(path, num, addr))
-            return True
-
+            return pd.DataFrame(array_out, columns=cols)        
+        
+      
+        
+            
+    def translate(self, data, addr):        
+        if addr == 0x6a or addr == 0x6b:
+            params = pd.read_csv(self.root+'/sensors/'+self.devices[addr]['cal']+'.csv')
+            data = self.translate_imu(acc=data[:,3:],
+                                                gyr=data[:,:3],
+                                                fs=self.fs,
+                                                acc_param=(params['acc_p']),
+                                                gyr_param=(params['gyr_p']))
+        elif addr == 0x36 or addr==0x48:                   
+            scale = pd.read_csv('./sensors/'+self.devices[addr]['cal']+'.csv', header=None)
+            data = data*scale.values
+        return data
         
 
     def dequeue_data(self,q: queue.Queue) -> dict:

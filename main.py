@@ -75,13 +75,25 @@ class app_gd(qtw.QMainWindow):
         self.ui.pButthon_link.setEnabled(True)
         self.ui.pButton_calib.setEnabled(True)
 
-    def pull(self):        
-        dq.session = self.ui.line_session.text()
-        res = dq.pull_data(durr=self.ui.label_durr.text())
-        logging.info('pull data {}'.format(res))
+    def pull(self):
+        res = dq.pull_data(durr=self.ui.label_durr.text())        
+        logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)
+        path = dq.root+'/data/'+self.ui.line_session.text()
+        try:
+            os.chdir(path)
+        except Exception as e:
+            logging.warning(exc_info=e)
+            os.mkdir(path)
+        n = os.listdir(path).__len__()
+        res.to_csv(path+'data_{}.csv'.format(n))
 
     def collect(self):
+        try:
+            os.chdir(dq.root+'/data/'+self.ui.line_session.text())
+        except Exception as e:
+            logging.warning(exc_info=e)
+            os.mkdir(dq.root+'/data/'+self.ui.line_session.text())
         self.ui.pButton_start.setEnabled(False)
         worker = Worker(self.pull)
         self.threadpool.start(worker)
@@ -102,8 +114,8 @@ class app_gd(qtw.QMainWindow):
         self.ui.listWidget.setCurrentItem(item)
 
     def interrupt(self):
-        logging.info('set dq.running to False')
         dq.running = False
+        logging.info('set dq.running to False')
 
     def stop_collect(self):
         worker = Worker(self.interrupt)
