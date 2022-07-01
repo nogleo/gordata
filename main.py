@@ -76,7 +76,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.pButton_calib.setEnabled(True)
 
     def pull(self):
-        res = dq.pull_data(durr=self.ui.label_durr.text())        
+        res = dq.pull_data(durr=float(self.ui.label_durr.text()))        
         logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)
         path = dq.root+'/data/'+self.ui.line_session.text()
