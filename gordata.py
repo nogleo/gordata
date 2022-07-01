@@ -233,7 +233,7 @@ class daq:
                     data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:
                     logging.info('dequeue data error, atribute NaN')
-                    data[addr].append((np.NaN,)*(val['len']//2))
+                    data[addr].append(data[addr][-1])
                     
         return data      
 class dsp:

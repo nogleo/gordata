@@ -238,6 +238,7 @@ class app_gd(qtw.QMainWindow):
             return
 
         self.calibrationdata = np.zeros((6*self.NS+3*self.ND, 6))
+        t = dq.dt*np.arange(6*self.NS+3*self.ND).reshape((-1,1))
         ii = 0
         i = 0
         while ii < 6:
@@ -269,7 +270,8 @@ class app_gd(qtw.QMainWindow):
                 return
             ii += 1
         pd.DataFrame(self.calibrationdata,
-                     columns=['Gx','Gy','Gz','Ax','Ay','Az']).to_csv(_path)
+                     columns=['Gx','Gy','Gz','Ax','Ay','Az'],
+                     index={'t':t}).to_csv(_path)
 
         acc_p, gyr_p = dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
                                         gyr=self.calibrationdata[:, 0:3],
