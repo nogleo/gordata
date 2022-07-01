@@ -148,7 +148,7 @@ class daq:
         return np.hstack((gyr_t, acc_t))
 
     def pull_data(self, durr: float=0.0, devices=None, rtrn_array=False):
-        q = queue.Queue()
+        q = deque()
         logging.info('Start pulling')
         if durr == 0:
             N = inf
@@ -156,8 +156,6 @@ class daq:
             N = durr*self.fs
         if devices is None:
             devices = self.devices
-               
-
         
         logging.info('activate dq.running')
         self.running = True
@@ -170,10 +168,10 @@ class daq:
                 ii+=1
                 for addr, val in devices.items():
                     try:
-                        q.put(self.bus.read_i2c_block_data(addr, val['reg'], val['len']))                                     
+                        q.append(self.bus.read_i2c_block_data(addr, val['reg'], val['len']))                                     
                     except Exception as e:
                         logging.info(exc_info=e)
-                        q.put((0,))
+                        q.append((0,))
                         pass                      
         
         t1 = time.perf_counter()
@@ -223,7 +221,7 @@ class daq:
             data = data*scale.values
         return data
         
-    def dequeue_data(self,q: queue.Queue) -> dict:
+    def dequeue_data(self,q: deque) -> dict:
         logging.info('start dequeueing...')
         data = {}
         for addr, val in self.devices.items():
@@ -231,7 +229,7 @@ class daq:
         logging.info('start looping through queue')    
         while not q.empty():       #block dequeueing data
             for addr, val in self.devices.items():
-                qq = q.get()
+                qq = q.popleft()
                 if any(qq):
                     data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:
