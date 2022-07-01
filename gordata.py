@@ -181,7 +181,42 @@ class daq:
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
 
-        return q
+        deq_data = self.dequeue_data(q)
+        logging.info('data dequeued')
+        t = np.array(np.arange(ii)*self.dt, ndmin=2).T
+
+        if rtrn_array:
+            array_out = t
+            for addr in deq_data:
+                array_out = np.hstack((array_out, deq_data[addr]))
+                
+            return array_out        
+        
+        else:
+            path = '{}/data/{}'
+            try:
+                num: int = os.listdir(path).__len__()
+            except Exception as e:
+                logging.info(exc_info=e)
+                num = 0
+                os.mkdir(path)
+
+            for addr in deq_data:
+                if devices[addr]['cal'] is not None and not raw:
+                    if addr == 0x6a or addr == 0x6b:
+                        params = pd.read_csv(self.root+'/sensors/'+devices[addr]['cal']+'.csv')
+                        deq_data[addr] = self.translate_imu(acc=deq_data[addr][:,3:],
+                                                            gyr=deq_data[addr][:,:3],
+                                                            fs=self.fs,
+                                                            acc_param=(params['acc_p']),
+                                                            gyr_param=(params['gyr_p']))
+                elif addr == 0x36 or addr==0x48:                   
+                    scale = pd.read_csv('./sensors/'+val['cal']+'.csv', header=None)
+                    val = val*scale.values
+
+                df = pd.DataFrame(deq_data[addr], index={'t':t}, columns=devices[addr]['lbl'])
+                df.to_csv('{}/data_{}/sensor_{}.csv',format(path, num, addr))
+            return True
 
         
 
