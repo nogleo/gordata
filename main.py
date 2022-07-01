@@ -75,10 +75,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.pButthon_link.setEnabled(True)
         self.ui.pButton_calib.setEnabled(True)
 
-    def pull(self):
-        for addr in dq.devices.keys():
-            dq.set_device(addr)
-            time.sleep(dq.dt)
+    def pull(self):        
         dq.session = self.ui.line_session.text()
         res = dq.pull_data(durr=self.ui.label_durr.text())
         logging.info('pull data {}'.format(res))
@@ -256,7 +253,6 @@ class app_gd(qtw.QMainWindow):
                 return
             ii += 1
 
-        logging.debug(i)
 
         ii = 0
         while ii < 3:
@@ -270,12 +266,12 @@ class app_gd(qtw.QMainWindow):
                 return
             ii += 1
         pd.DataFrame(self.calibrationdata,
-                     columns=['Gx','Gy','Gz','Ax','Ay','Az'],
-                     index={'t':t}).to_csv(_path)
+                     columns=['Gx','Gy','Gz','Ax','Ay','Az']).to_csv(_path)
 
         acc_p, gyr_p = dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
                                         gyr=self.calibrationdata[:, 0:3],
                                         Ts=TS, Td=TD, fs=dq.fs, name=_name)
+
         pd.DataFrame({'acc_p':acc_p, 'gyr_p':gyr_p}).to_csv(dq.root+'/sensors/{}.csv'.format(_name))
         
         logging.info("Garbage collection: {}".format(gc.collect()))

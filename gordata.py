@@ -157,10 +157,7 @@ class daq:
             devices = self.devices
                
 
-        value = []
-        for addr, val in devices.items():
-            value.append([addr, val['reg'], val['len']])
-
+        
         logging.info('activate dq.running')
         self.running = True
         ii=0
@@ -170,13 +167,13 @@ class daq:
             if tf-ti>=self.dt:
                 ti = tf
                 ii+=1
-                for val in value:
+                for addr, val in devices.items():
                     try:
-                        q.put(self.bus.read_i2c_block_data(val[0], val[1], val[2]))                                     
-                    except:
+                        q.put(self.bus.read_i2c_block_data(addr, val['reg'], val['len']))                                     
+                    except Exception as e:
+                        logging.info(exc_info=e)
                         q.put((0,))
-                        pass
-                        
+                        pass                      
         
         t1 = time.perf_counter()
         logging.info("Pulled data in %.6f s" % (t1-t0))
