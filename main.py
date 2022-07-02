@@ -74,14 +74,14 @@ class app_gd(qtw.QMainWindow):
         self.ui.pButton_calib.setEnabled(True)
 
     def pull(self):
+        logging.info('Time to collect: '+self.ui.label_durr.text())
+        dq.session = self.ui.line_session.text()
         logging.info('main pull')
         dq.pull_data(durr=float(self.ui.label_durr.text()))   
         logging.info('pull data ok')
         self.ui.pButton_start.setEnabled(True)
 
     def collect(self):
-        logging.info('Time to collect: '+self.ui.label_durr.text())
-        dq.session = self.ui.line_session.text()
         self.ui.pButton_start.setEnabled(False)
         worker = Worker(self.pull)
         self.threadpool.start(worker)
