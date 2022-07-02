@@ -61,7 +61,7 @@ class app_gd(qtw.QMainWindow):
         self.data_buffer: pd.DataFrame = pd.DataFrame()
         self.datacache = []
         self.threadpool = qtc.QThreadPool()
-        logging.debug("Multithreading with maximum %d threads" %
+        logging.info("Multithreading with maximum %d threads" %
                       self.threadpool.maxThreadCount())
         self.canv = MatplotlibCanvas(self)
         self.ui.vLayout_viz.addWidget(self.canv)
@@ -69,7 +69,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.hLayout_viz.addWidget(self.navigation)
         today = datetime.date.today()
         self.ui.line_session.setText(today.strftime('%Y-%m-%d'))
-        
+        self.initDevices()
         
     def initDevices(self):
         self.device_list = {}

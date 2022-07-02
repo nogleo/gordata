@@ -142,7 +142,7 @@ class daq:
                     
             return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
 
-    def translate_imu(self, acc: np.array=None, gyr=None, fs=None, acc_param=None, gyr_param=None):
+    def translate_imu(self, acc: np.array=None, gyr=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
@@ -211,7 +211,7 @@ class daq:
             
             df = pd.DataFrame(deq_data[addr],
                          columns=devices[addr]['lbl'],
-                         index=t)
+                         index=np.arange(ii)*self.dt)
             logging.info('dataframe created')
             df.to_csv(path+'/sensor_{}.csv'.format(addr), index_label='t')
                            
