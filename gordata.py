@@ -32,11 +32,11 @@ class daq:
         self.session: str = None
         self.devices: dict = {}
         self.settings: dict = {}
-        self.fs: float = 1666  # sampling frequency
+        self.fs: float = 3333  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
-        self.data_rate: int = 9  # 8=1666Hz 9=3330Hz 10=6660Hz
+        self.data_rate: int = 10  # 8=1666Hz 9=3330Hz 10=6660Hz
         self.data_range: list[int] = [1, 3]  # [16G, 2000DPS]
         
         self.init_devices()
@@ -202,13 +202,14 @@ class daq:
 
 
         for addr in deq_data:
+            _cols = ['t']
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
                 deq_data[addr] = self.translate(deq_data[addr], addr)
             logging.info('data transleted')
             _data = np.hstack((t, deq_data[addr]))
-            _cols = ['t'].extend(devices[addr]['lbl'])
-            pd.DataFrame(_data, columns=_cols).to_csv(path+'/sensor{}'.format(addr))
+            _cols.extend(devices[addr]['lbl'])
+            pd.DataFrame(_data, columns=_cols).to_csv(path+'/sensor_{}.csv'.format(addr))
                            
 
     
