@@ -122,7 +122,7 @@ class app_gd(qtw.QMainWindow):
         self.ui.cBox_method.setCurrentIndex(0)
         
         files = qtw.QFileDialog.getOpenFileNames(directory='home/pi/gordata/data')[0]
-        DF =  [pd.read_csv(file, index_col='t') for file in files]
+        DF =  [pd.read_csv(file, index_col=0) for file in files]
         self.datacache = pd.concat(DF)
 
         try:
