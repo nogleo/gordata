@@ -32,7 +32,7 @@ class daq:
         self.session: str = None
         self.devices: dict = {}
         self.settings: dict = {}
-        self.fs: float = 6666  # sampling frequency
+        self.fs: float = 3333  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
