@@ -116,7 +116,7 @@ class app_gd(qtw.QMainWindow):
     def linkSens(self):
         self.filename = qtw.QFileDialog.getOpenFileName(
             directory='home/pi/gordata/sensors')[0]
-        logging.info("File :", self.filename)
+        logging.info("File : {}".format(self.filename))
         addr = self.ui.listWidget.currentItem().text()[:3]
         dq.devices[int(addr)]['cal'] = self.filename[25:-4]
         self.loadDevices()
