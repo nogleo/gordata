@@ -1,7 +1,6 @@
 from cmath import inf
 from collections import deque
 import os
-import queue
 from struct import unpack
 import time
 import smbus
@@ -14,7 +13,7 @@ import ahrs
 from matplotlib import pyplot as plt
 import logging
 from scipy.fftpack import fft, ifft, fftfreq, fftshift
-
+import pickle
 import ghostipy as gp
 from sympy import reshape
 class daq:
@@ -134,15 +133,12 @@ class daq:
             gyr_ref = ((gyr_rot > 100)*np.pi + (gyr_rot < -100)*-np.pi)/(Nd/fs)
             gyr_KS = gyr_ref@np.linalg.inv(gyr_rot)
             if name is not None:
-                try:
-                    pd.DataFrame({'acc_p':[acc_KS, acc_bias], 'gyr_p': [gyr_KS, gyr_bias]}).to_csv(self.root+'/sensors/_'+name+'.csv')
-                    
-                except:
-                    logging.warning("ERROR: unable to save calibration data")
-                    
-            return (acc_KS, acc_bias), (gyr_KS, gyr_bias)   
+                params= {'acc': (acc_KS, acc_bias),
+                         'gyr': (gyr_KS, gyr_bias)}
+                with open('{}.pkl'.format(self.root+'/sensors/_'+name),'wb') as file:
+                    pickle.dump(params, file)
 
-    def translate_imu(self, acc: np.array=None, gyr=None, acc_param=None, gyr_param=None):
+    def translate_imu(self, acc=None, gyr=None, acc_param=None, gyr_param=None):
         acc_t = acc_param[0]@(acc.T-acc_param[1])
         gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
         return np.hstack((gyr_t, acc_t))
@@ -219,16 +215,16 @@ class daq:
     
 
     def translate(self, data, addr):        
+        with open('{}.pkl'.format(self.root+'/sensors/'+self.devices[addr]['cal'])) as file:
+            params: dict = file.read()
         if addr == 0x6a or addr == 0x6b:
-            params = pd.read_csv(self.root+'/sensors/'+self.devices[addr]['cal']+'.csv')
             data = self.translate_imu(acc=data[:,3:],
-                                                gyr=data[:,:3],
-                                                fs=self.fs,
-                                                acc_param=(params['acc_p']),
-                                                gyr_param=(params['gyr_p']))
-        elif addr == 0x36 or addr==0x48:                   
-            scale = pd.read_csv('./sensors/'+self.devices[addr]['cal']+'.csv', header=None)
-            data = data*scale.values
+                                      gyr=data[:,:3],
+                                      fs=self.fs,
+                                      acc_param=(params['acc']),
+                                      gyr_param=(params['gyr']))
+        elif addr == 0x36 or addr==0x48: 
+            data = data*params.values
         return data
         
     def dequeue_data(self,q: deque) -> dict:

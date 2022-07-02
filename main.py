@@ -271,11 +271,11 @@ class app_gd(qtw.QMainWindow):
         pd.DataFrame(self.calibrationdata,
                      columns=['Gx','Gy','Gz','Ax','Ay','Az']).to_csv(_path)
 
-        acc_p, gyr_p = dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
-                                        gyr=self.calibrationdata[:, 0:3],
-                                        Ts=TS, Td=TD, fs=dq.fs, name=_name)
+        dq.calibrate_imu(acc=self.calibrationdata[:, 3:6],
+                         gyr=self.calibrationdata[:, 0:3],
+                         Ts=TS, Td=TD, fs=dq.fs, name=_name)
 
-        pd.DataFrame({'acc_p':acc_p, 'gyr_p':gyr_p}).to_csv(dq.root+'/sensors/{}.csv'.format(_name))
+        
         
         logging.info("Garbage collection: {}".format(gc.collect()))
 
