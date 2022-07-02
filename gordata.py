@@ -202,14 +202,13 @@ class daq:
 
 
         for addr in deq_data:
-            _cols = ['t']
+            
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
                 deq_data[addr] = self.translate(deq_data[addr], addr)
             logging.info('data transleted')
-            _data = np.hstack((t, deq_data[addr]))
-            _cols.extend(devices[addr]['lbl'])
-            pd.DataFrame(_data, columns=_cols,index='t').to_csv(path+'/sensor_{}.csv'.format(addr))
+            
+            pd.DataFrame(deq_data[addr], columns=devices[addr]['lbl'],index=t).to_csv(path+'/sensor_{}.csv'.format(addr))
                            
 
     
