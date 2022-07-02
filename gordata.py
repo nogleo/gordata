@@ -32,7 +32,7 @@ class daq:
         self.session: str = None
         self.devices: dict = {}
         self.settings: dict = {}
-        self.fs: float = 3333  # sampling frequency
+        self.fs: float = 6666  # sampling frequency
         self.dt: float = 1/self.fs  # sampling period
         self.running: bool = False
         self.raw: bool = False
@@ -209,7 +209,7 @@ class daq:
             logging.info('data transleted')
             _data = np.hstack((t, deq_data[addr]))
             _cols.extend(devices[addr]['lbl'])
-            pd.DataFrame(_data, columns=_cols).to_csv(path+'/sensor_{}.csv'.format(addr))
+            pd.DataFrame(_data, columns=_cols,index='t').to_csv(path+'/sensor_{}.csv'.format(addr))
                            
 
     
