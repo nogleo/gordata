@@ -188,14 +188,7 @@ class daq:
                 array_out = np.hstack((array_out, deq_data[addr]))
             return array_out[:,1:]
         
-        for addr in deq_data:
-            logging.info('translate steps')
-            if devices[addr]['cal'] is not None:
-                deq_data = self.translate(deq_data[addr], addr)
-            self.save_data(pd.DataFrame(deq_data[addr], columns=devices[addr]['lbl'], index={'t': t}))
-            
-
-    def save_data(self, df: pd.DataFrame):
+        logging.info('setup directory')
         path = self.root+'/data/'+self.session
         logging.info('Try and save data into path: {}'.format(path))
         try:
@@ -204,8 +197,18 @@ class daq:
             logging.warning(exc_info=e)
             os.mkdir(path)
         n = os.listdir(path).__len__()
-        df.to_csv(path+'data_{}.csv'.format(n))
+        path = path+'/data_{}'.format(n)
+        os.mkdir(path)
 
+
+        for addr in deq_data:
+            logging.info('translate steps')
+            if devices[addr]['cal'] is not None:
+                deq_data[addr] = self.translate(deq_data[addr], addr)
+            pd.DataFrame(deq_data[addr], columns=devices[addr]['lbl'], index={'t': t}).to_csv(path+'/sensor{}'.format(addr))
+                           
+
+    
 
     def translate(self, data, addr):        
         if addr == 0x6a or addr == 0x6b:
