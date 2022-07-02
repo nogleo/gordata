@@ -205,7 +205,10 @@ class daq:
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
                 deq_data[addr] = self.translate(deq_data[addr], addr)
-            pd.DataFrame(deq_data[addr], columns=devices[addr]['lbl'], index={'t': t}).to_csv(path+'/sensor{}'.format(addr))
+            logging.info('data transleted')
+            _data = np.hstack((t, deq_data[addr]))
+            _cols = ['t'].extend(devices[addr]['lbl'])
+            pd.DataFrame(_data, columns=_cols).to_csv(path+'/sensor{}'.format(addr))
                            
 
     
