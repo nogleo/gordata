@@ -209,9 +209,11 @@ class daq:
                 deq_data[addr] = self.translate(deq_data[addr], addr)
             logging.info('data transleted')
             
-            pd.DataFrame(deq_data[addr],
+            df = pd.DataFrame(deq_data[addr],
                          columns=devices[addr]['lbl'],
-                         index=t).to_csv(path+'/sensor_{}.csv'.format(addr))
+                         index=t)
+            logging.info('dataframe created')
+            df.to_csv(path+'/sensor_{}.csv'.format(addr), index_label='t')
                            
 
     
