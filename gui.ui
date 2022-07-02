@@ -203,17 +203,10 @@
           </property>
          </widget>
         </item>
-        <item row="0" column="5">
-         <widget class="QPushButton" name="pButton_datesession">
-          <property name="text">
-           <string>session &lt;&lt; date</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="2" colspan="3">
+        <item row="0" column="2" colspan="4">
          <widget class="QLineEdit" name="line_session">
           <property name="text">
-           <string>unamed</string>
+           <string/>
           </property>
          </widget>
         </item>
@@ -360,11 +353,6 @@
             <item>
              <property name="text">
               <string>STFT</string>
-             </property>
-            </item>
-            <item>
-             <property name="text">
-              <string>WSST</string>
              </property>
             </item>
            </widget>

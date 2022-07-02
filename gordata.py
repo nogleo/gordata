@@ -194,8 +194,9 @@ class daq:
         try:
             os.chdir(path)
         except Exception as e:
-            logging.warning(exc_info=e)
             os.mkdir(path)
+            logging.warning('directory missing',exc_info=e)
+            pass
         n = os.listdir(path).__len__()
         path = path+'/data_{}'.format(n)
         os.mkdir(path)

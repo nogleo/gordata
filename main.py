@@ -1,5 +1,6 @@
 import logging
 import gc
+from time import time
 import pandas as pd
 import numpy as np
 from PyQt5 import QtCore as qtc
@@ -12,6 +13,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg, NavigationTool
 import gordata as gd
 from gui import Ui_MainWindow
 import os
+import datetime
 
 root = os.getcwd()
 
@@ -65,6 +67,8 @@ class app_gd(qtw.QMainWindow):
         self.ui.vLayout_viz.addWidget(self.canv)
         self.navigation = Navi(self.canv, self.ui.tab_viz)
         self.ui.hLayout_viz.addWidget(self.navigation)
+        today = datetime.date.today()
+        self.ui.line_session.setText(today.strftime('%Y-%m-%d'))
         
         
     def initDevices(self):
