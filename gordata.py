@@ -220,7 +220,6 @@ class daq:
         if addr == 0x6a or addr == 0x6b:
             data = self.translate_imu(acc=data[:,3:],
                                       gyr=data[:,:3],
-                                      fs=self.fs,
                                       acc_param=(params['acc']),
                                       gyr_param=(params['gyr']))
         elif addr == 0x36 or addr==0x48: 
