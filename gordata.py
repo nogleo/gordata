@@ -229,7 +229,7 @@ class daq:
         for addr, val in self.devices.items():
             data[addr] = []
         logging.info('start looping through queue')    
-        while not q.empty():       #block dequeueing data
+        while q.__len__()>0:       #block dequeueing data
             for addr, val in self.devices.items():
                 qq = q.popleft()
                 if any(qq):
