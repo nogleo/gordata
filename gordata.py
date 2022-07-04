@@ -219,16 +219,19 @@ class daq:
     
 
     def translate(self, data, addr):        
-        logging.info('pickle read')
         with open('{}.pkl'.format(self.root+'/sensors/'+self.devices[addr]['cal']), 'rb') as file:
             params = pickle.load(file)
+        logging.info('pickle read done')
         
         if addr == 0x6a or addr == 0x6b:
             logging.info('translate imu')
-            dataout = self.translate_imu(acc=data[:,3:],
+            try:
+                dataout = self.translate_imu(acc=data[:,3:],
                                       gyr=data[:,:3],
                                       acc_param=(params['acc']),
                                       gyr_param=(params['gyr']))
+            except Exception as e:
+                logging.error('can`t tranl', exc_info=e)
         elif addr == 0x36 or addr==0x48: 
             data = data*params.values
 
