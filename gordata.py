@@ -139,8 +139,9 @@ class daq:
                     pickle.dump(params, file)
 
     def translate_imu(self, acc=None, gyr=None, acc_param=None, gyr_param=None):
-        acc_t = acc_param[0]@(acc.T-acc_param[1])
-        gyr_t = gyr_param[0]@(gyr.T-gyr_param[1])
+        acc_t = acc_param[0]@(acc.T-acc_param[1]).T
+        gyr_t = gyr_param[0]@(gyr.T-gyr_param[1]).T
+        logging.info('return imu translation')
         return np.hstack((gyr_t, acc_t))
 
     def pull_data(self, durr: float=0.0, devices=None, rtrn_array=False):
