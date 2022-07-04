@@ -204,14 +204,14 @@ class daq:
         for addr in deq_data:
             print(deq_data[addr])
             
+            data = np.array(deq_data[addr])
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
                 logging.info('try transl {}'.format(addr))
-                data = deq_data[addr]
-                data = self.translate(deq_data[addr], addr)
+                
+                data = self.translate(data, addr)
                 logging.info('data transleted')
-            else:
-                data = deq_data[addr]
+            
             
             df = pd.DataFrame(data,
                          columns=devices[addr]['lbl'],
