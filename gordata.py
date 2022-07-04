@@ -92,7 +92,7 @@ class daq:
                     self.settings[address] = {}
 
             except:
-                logging.debug("can`t connect address: : 0x%02X", address)
+                logging.warning("can`t connect address: : 0x%02X".format(address))
                 pass
 
     def set_device(self, address: int) -> bool: 
@@ -203,10 +203,13 @@ class daq:
             
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
-                deq_data[addr] = self.translate(deq_data[addr], addr)
-            logging.info('data transleted')
+                logging.info('try transl {}'.format(addr))
+                data = self.translate(deq_data[addr], addr)
+                logging.info('data transleted')
+            else:
+                data = deq_data[addr]
             
-            df = pd.DataFrame(deq_data[addr],
+            df = pd.DataFrame(data,
                          columns=devices[addr]['lbl'],
                          index=np.arange(ii)*self.dt)
             logging.info('dataframe created')
@@ -222,7 +225,7 @@ class daq:
         
         if addr == 0x6a or addr == 0x6b:
             logging.info('translate imu')
-            data = self.translate_imu(acc=data[:,3:],
+            dataout = self.translate_imu(acc=data[:,3:],
                                       gyr=data[:,:3],
                                       acc_param=(params['acc']),
                                       gyr_param=(params['gyr']))
@@ -230,7 +233,7 @@ class daq:
             data = data*params.values
 
         logging.info('return data transl')
-        return data
+        return dataout
         
     def dequeue_data(self,q: deque) -> dict:
         logging.info('start dequeueing...')
