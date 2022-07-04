@@ -103,7 +103,7 @@ class app_gd(qtw.QMainWindow):
             
             
             logging.debug(f"Device {address} loaded")
-        self.ui.listWidget.setCurrentItem(item)
+        self.ui.listWidget.setCurrentRow(0)
 
     def interrupt(self):
         dq.running = False
