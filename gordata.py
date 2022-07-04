@@ -202,10 +202,12 @@ class daq:
 
 
         for addr in deq_data:
+            print(deq_data[addr])
             
             logging.info('translate steps')
             if devices[addr]['cal'] is not None:
                 logging.info('try transl {}'.format(addr))
+                data = deq_data[addr]
                 data = self.translate(deq_data[addr], addr)
                 logging.info('data transleted')
             else:
