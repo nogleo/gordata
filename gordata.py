@@ -141,8 +141,8 @@ class daq:
     def translate_imu(self, acc=None, gyr=None, params=None) -> np.ndarray:
         a_p = params['acc']
         g_p = params['gyr']
-        acc_t = a_p[0]@(acc.T-a_p[1]).T
-        gyr_t = g_p[0]@(gyr.T-g_p[1]).T
+        acc_t = (a_p[0]@(acc.T-a_p[1])).T
+        gyr_t = (g_p[0]@(gyr.T-g_p[1])).T
         logging.info('return imu translation')
         return np.hstack((gyr_t, acc_t))
 
