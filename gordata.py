@@ -138,9 +138,11 @@ class daq:
                 with open('{}.pkl'.format(self.root+'/sensors/_'+name),'wb') as file:
                     pickle.dump(params, file)
 
-    def translate_imu(self, acc=None, gyr=None, acc_param=None, gyr_param=None):
-        acc_t = acc_param[0]@(acc.T-acc_param[1]).T
-        gyr_t = gyr_param[0]@(gyr.T-gyr_param[1]).T
+    def translate_imu(self, acc=None, gyr=None, params=None) -> np.ndarray:
+        a_p = params['acc']
+        g_p = params['gyr']
+        acc_t = a_p[0]@(acc.T-a_p[1]).T
+        gyr_t = g_p[0]@(gyr.T-g_p[1]).T
         logging.info('return imu translation')
         return np.hstack((gyr_t, acc_t))
 
@@ -218,7 +220,7 @@ class daq:
 
     
 
-    def translate(self, data, addr):        
+    def translate(self, data: np.ndarray, addr) -> np.ndarray:        
         with open('{}.pkl'.format(self.root+'/sensors/'+self.devices[addr]['cal']), 'rb') as file:
             params = pickle.load(file)
         logging.info('pickle read done')
@@ -226,9 +228,7 @@ class daq:
         if addr == 0x6a or addr == 0x6b:
             logging.info('translate imu')
             try:
-                dataout = self.translate_imu(acc=data[:,3:],
-                                      gyr=data[:,:3],
-                                      acc_param=(params['acc']),
+                dataout = self.translate_imu(acc=data[:,3:-1],gyr=data[:,0:3],acc_param=(params['acc']),
                                       gyr_param=(params['gyr']))
             except Exception as e:
                 logging.error('can`t tranl', exc_info=e)
@@ -250,7 +250,7 @@ class daq:
                 if any(qq):
                     data[addr].append(unpack(val['fmt'], bytearray(qq)))
                 else:
-                    logging.info('dequeue data error, atribute NaN')
+                    logging.info('dequeue data error, last value')
                     data[addr].append(data[addr][-1])
                     
         return data      
