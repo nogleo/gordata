@@ -72,6 +72,8 @@ class app_gd(qtw.QMainWindow):
         self.initDevices()
         
     def initDevices(self):
+        global dq
+        dq = gd.daq()
         self.device_list = {}
         self.loadDevices()
         self.ui.pButthon_link.setEnabled(True)

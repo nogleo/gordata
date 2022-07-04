@@ -227,6 +227,8 @@ class daq:
                                       gyr_param=(params['gyr']))
         elif addr == 0x36 or addr==0x48: 
             data = data*params.values
+
+        logging.info('return data transl')
         return data
         
     def dequeue_data(self,q: deque) -> dict:
