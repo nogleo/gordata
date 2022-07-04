@@ -228,8 +228,9 @@ class daq:
         if addr == 0x6a or addr == 0x6b:
             logging.info('translate imu')
             try:
-                dataout = self.translate_imu(acc=data[:,3:-1],gyr=data[:,0:3],acc_param=(params['acc']),
-                                      gyr_param=(params['gyr']))
+                acc = data[:,3:]
+                gyr = data[:,:3]
+                dataout = self.translate_imu(acc=acc,gyr=gyr,params=params)
             except Exception as e:
                 logging.error('can`t tranl', exc_info=e)
         elif addr == 0x36 or addr==0x48: 
