@@ -261,7 +261,7 @@ class app_gd(qtw.QMainWindow):
 
         ii = 0
         while ii < 3:
-            ok = self.showmessage('Rotate Cube Around Axis '+str(ii+1))
+            ok = self.showmessage('Rotate Cube 180 degrees Around Axis '+str(ii+1))
             if ok:
                 logging.info('collecting rotation  ' + str(ii+1))
                 

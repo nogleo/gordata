@@ -135,7 +135,7 @@ class daq:
             if name is not None:
                 params= {'acc': (acc_KS, acc_bias),
                          'gyr': (gyr_KS, gyr_bias)}
-                with open('{}.pkl'.format(self.root+'/sensors/_'+name),'wb') as file:
+                with open('{}.pkl'.format(self.root+'/sensors/'+name),'wb') as file:
                     pickle.dump(params, file)
 
     def translate_imu(self, acc=None, gyr=None, params=None) -> np.ndarray:
@@ -169,7 +169,7 @@ class daq:
                     try:
                         q.append(self.bus.read_i2c_block_data(addr, val['reg'], val['len']))                                     
                     except Exception as e:
-                        logging.info(exc_info=e)
+                        logging.info('can`t read i2c',exc_info=e)
                         q.append((0,))
                         pass                      
         
